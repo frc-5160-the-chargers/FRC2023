@@ -1,0 +1,8 @@
+complexity:
+  LongParameterList:
+    functionThreshold: 8
+style:
+  NewLineAtEndOfFile:
+    active: false
+build:
+  maxIssues: -1

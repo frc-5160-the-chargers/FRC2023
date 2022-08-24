@@ -1,6 +1,10 @@
+import edu.wpi.first.gradlerio.GradleRIOPlugin
+
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2022.4.1"
+    id 'org.jetbrains.kotlin.jvm' version '1.7.20-Beta'
+    id 'io.gitlab.arturbosch.detekt' version '1.21.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
@@ -45,11 +49,27 @@ wpi.java.debugJni = false
 // Set this to true to enable desktop support.
 def includeDesktopSupport = true
 
+kotlin {
+    compileKotlin {
+        kotlinOptions {
+            freeCompilerArgs += "-Xcontext-receivers"
+            freeCompilerArgs += "-Xallow-kotlin-package"
+            freeCompilerArgs += "-Xskip-prerelease-check"
+        }
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 4.
 dependencies {
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
+    implementation "com.batterystaple:ChargerLib:1.0.0-SNAPSHOT"
 
     roborioDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.roborio)
     roborioDebug wpi.java.vendor.jniDebug(wpi.platforms.roborio)
@@ -65,7 +85,7 @@ dependencies {
     nativeRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
     simulationRelease wpi.sim.enableRelease()
 
-    testImplementation 'junit:junit:4.13.1'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 // Simulation configuration (e.g. environment variables).
@@ -77,7 +97,7 @@ wpi.sim.addDriverstation()
 // knows where to look for our Robot Class.
 jar {
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-    manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
+    manifest GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
@@ -85,3 +105,9 @@ jar {
 deployArtifact.jarTask = jar
 wpi.java.configureExecutableTasks(jar)
 wpi.java.configureTestTasks(test)
+
+detekt {
+    toolVersion = "1.21.0"
+    config = files("config/detekt/detekt.yml")
+    buildUponDefaultConfig = true
+}
