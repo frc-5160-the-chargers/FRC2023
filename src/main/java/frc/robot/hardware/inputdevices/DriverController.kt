@@ -8,6 +8,8 @@ import frc.chargers.wpilibextensions.kinematics.ChassisPowers
 class DriverController(
     port: Int,
     deadband: Double,
+    private val forwardsPowerScale: Double,
+    private val rotationPowerScale: Double,
     private val shouldInvertStraightDriveDirection: Boolean = false,
     private val shouldInvertRotationDirection: Boolean = false,
     private val turboModeMultiplierRange: ClosedRange<Double> = 0.0..1.0,
@@ -25,8 +27,8 @@ class DriverController(
         if (shouldInvertRotationDirection) { rotationPower *= -1 }
 
         return ChassisPowers(
-            xPower = forwardsPower * 0.35,
-            rotationPower = rotationPower * -0.4
+            xPower = forwardsPower * forwardsPowerScale,
+            rotationPower = rotationPower * rotationPowerScale
         )
     }
 
