@@ -1,7 +1,5 @@
 package frc.robot.hardware.subsystems
 
-import frc.robot.hardware.subsystems.Shooter.State.ENABLED
-import frc.robot.hardware.subsystems.Shooter.State.DISABLED
 import edu.wpi.first.wpilibj.motorcontrol.MotorController
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 
@@ -11,30 +9,31 @@ class Shooter(
     private val frontPower: Double,
     private val backPower: Double,
 ) : SubsystemBase() {
-    private var state: State = DISABLED
+    private var state: State = State.DISABLED
 
     fun enable() {
-        state = ENABLED
+        state = State.ENABLED
     }
 
     fun disable() {
-        state = DISABLED
+        state =
+            State.DISABLED
     }
 
     fun toggle() {
         state = when (state) {
-            ENABLED -> DISABLED
-            DISABLED -> ENABLED
+            State.ENABLED -> State.DISABLED
+            State.DISABLED -> State.ENABLED
         }
     }
 
     override fun periodic() {
         when(state) {
-            ENABLED -> {
+            State.ENABLED -> {
                 frontMotor.set(frontPower)
                 backMotor.set(backPower)
             }
-            DISABLED -> {
+            State.DISABLED -> {
                 frontMotor.set(0.0)
                 backMotor.set(0.0)
             }

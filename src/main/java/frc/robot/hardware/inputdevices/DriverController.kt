@@ -12,6 +12,11 @@ class DriverController(
     private val shouldInvertRotationDirection: Boolean = false,
     private val turboModeMultiplierRange: ClosedRange<Double> = 0.0..1.0,
 ) : ChargerController(port, deadband) {
+    val lowerLeftArmButton = button(Axis.kLeftTrigger, threshold = 0.5)
+    val raiseLeftArmButton = button(Button.kLeftBumper)
+    val lowerRightArmButton = button(Axis.kRightTrigger, threshold = 0.5)
+    val raiseRightArmButton = button(Button.kRightBumper)
+
     val curvatureOutput: ChassisPowers get() {
         var forwardsPower = leftY.withDeadband()
         var rotationPower = rightX.withDeadband()
@@ -20,8 +25,8 @@ class DriverController(
         if (shouldInvertRotationDirection) { rotationPower *= -1 }
 
         return ChassisPowers(
-            xPower = forwardsPower * 0.5,
-            rotationPower = rotationPower * 0.7
+            xPower = forwardsPower * 0.35,
+            rotationPower = rotationPower * -0.4
         )
     }
 
