@@ -12,12 +12,11 @@ class DriverController(
     private val rotationPowerScale: Double,
     private val shouldInvertStraightDriveDirection: Boolean = false,
     private val shouldInvertRotationDirection: Boolean = false,
-    private val turboModeMultiplierRange: ClosedRange<Double> = 0.0..1.0,
+    private val turboModeMultiplierRange: ClosedRange<Double> = 1.0..2.0,
+    private val precisionModeDividerRange: ClosedRange<Double> = 1.0..4.0,
 ) : ChargerController(port, deadband) {
-    val lowerLeftArmButton = button(Axis.kLeftTrigger, threshold = 0.5)
-    val raiseLeftArmButton = button(Button.kLeftBumper)
-    val lowerRightArmButton = button(Axis.kRightTrigger, threshold = 0.5)
-    val raiseRightArmButton = button(Button.kRightBumper)
+    val intakeButton = button(Button.kA)
+    val outtakeButton = button(Button.kB)
 
     val curvatureOutput: ChassisPowers get() {
         var forwardsPower = leftY.withDeadband()
@@ -27,12 +26,16 @@ class DriverController(
         if (shouldInvertRotationDirection) { rotationPower *= -1 }
 
         return ChassisPowers(
-            xPower = forwardsPower * forwardsPowerScale,
-            rotationPower = rotationPower * rotationPowerScale
+            xPower = forwardsPower * forwardsPowerScale * turboModeMultiplier * precisionModeMultiplier,
+            rotationPower = -rotationPower * rotationPowerScale * turboModeMultiplier * precisionModeMultiplier
         )
     }
 
-    val turboModePower: Double get() =
-        rightTriggerAxis
+    private val turboModeMultiplier: Double get() =
+        leftTriggerAxis
             .mapBetweenRanges(from = 0.0..1.0, to = turboModeMultiplierRange)
+
+    private val precisionModeMultiplier: Double get() =
+        1 / rightTriggerAxis
+            .mapBetweenRanges(from = 0.0..1.0, to = precisionModeDividerRange)
 }
