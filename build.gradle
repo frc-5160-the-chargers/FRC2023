@@ -2,7 +2,7 @@ import edu.wpi.first.gradlerio.GradleRIOPlugin
 
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO" version "2022.4.1"
+    id "edu.wpi.first.GradleRIO" version "2023.2.1"
     id 'org.jetbrains.kotlin.jvm' version '1.7.20-Beta'
     id 'io.gitlab.arturbosch.detekt' version '1.21.0'
 }
