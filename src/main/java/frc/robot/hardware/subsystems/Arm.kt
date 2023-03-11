@@ -37,8 +37,8 @@ class Arm(
     private val encoderMultiplierA = if (jointAEncoder == null) gearRatioA else 1.0
     private val encoderMultiplierB = if (jointBEncoder == null) gearRatioB else 1.0
 
-    private val q1: Angle get() = jointAEncoder.angularPosition * encoderMultiplierA + jointAOffset
-    private val q2: Angle get() = jointBEncoder.angularPosition * encoderMultiplierB + jointBOffset
+    /*private*/ val q1: Angle get() = jointAEncoder.angularPosition * encoderMultiplierA + jointAOffset
+    /*private*/ val q2: Angle get() = jointBEncoder.angularPosition * encoderMultiplierB + jointBOffset
 //    private val qDot1: AngularVelocity get() = jointAMotors.encoder.angularVelocity * gearRatioA
 //    private val qDot2: AngularVelocity get() = jointBMotor.encoder.angularVelocity * gearRatioB
 
@@ -88,6 +88,8 @@ class Arm(
         SmartDashboard.putNumber("Theta B (º)", thetaB.inUnit(Degrees))
 //        SmartDashboard.putNumber("Omega A (º/s)", omegaA.inUnit(Degrees / seconds))
 //        SmartDashboard.putNumber("Omega B (º/s)", omegaB.inUnit(Degrees / seconds))
+        SmartDashboard.putNumber("Q1 (º)", q1.inUnit(Degrees))
+        SmartDashboard.putNumber("Q2 (º)", q2.inUnit(Degrees))
 
         SmartDashboard.putNumber("Turret Current (A prob)", swivelMotor.outputCurrent)
 

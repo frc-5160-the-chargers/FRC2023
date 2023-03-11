@@ -4,6 +4,7 @@ package frc.robot
 
 import com.batterystaple.kmeasure.units.degrees
 import com.batterystaple.kmeasure.units.inches
+import com.batterystaple.kmeasure.units.meters
 import com.batterystaple.kmeasure.units.seconds
 import com.revrobotics.CANSparkMax
 import edu.wpi.first.cameraserver.CameraServer
@@ -12,9 +13,12 @@ import edu.wpi.first.wpilibj2.command.Command
 import frc.chargers.commands.InstantCommand
 import frc.chargers.commands.RunCommand
 import frc.chargers.commands.buildCommand
+import frc.chargers.commands.drivetrainCommands.driveStraight
 import frc.chargers.commands.setDefaultRunCommand
+import frc.chargers.controls.pid.PIDConstants
 import frc.chargers.hardware.motorcontrol.EncoderMotorControllerGroup
 import frc.chargers.hardware.motorcontrol.rev.neoSparkMax
+import frc.chargers.hardware.sensors.NavX
 import frc.chargers.hardware.sensors.encoders.AnalogPotentiometerPositionEncoder
 import frc.chargers.hardware.subsystems.drivetrain.EncoderDifferentialDrivetrain
 import frc.chargers.hardware.subsystems.drivetrain.sparkMaxDrivetrain
@@ -24,6 +28,7 @@ import frc.robot.hardware.inputdevices.OperatorController
 import frc.robot.hardware.subsystems.Arm
 import frc.robot.hardware.subsystems.Intake
 import frc.robot.hardware.subsystems.Lights
+import frc.robot.math.sin
 import kotlin.math.PI
 import kotlin.math.cos
 
@@ -77,6 +82,7 @@ class RobotContainer {
     )
 
     private val lights = Lights()
+//    private val navX = NavX()
 
     var armCommand: Command? = null
 
@@ -85,8 +91,14 @@ class RobotContainer {
         configureButtonBindings()
     }
 
-    val camera1 = CameraServer.startAutomaticCapture(0)
-    val camera2 = CameraServer.startAutomaticCapture(1)
+    val camera = CameraServer.startAutomaticCapture()
+//    val camera1 = CameraServer.startAutomaticCapture(0)
+//    val camera2 = CameraServer.startAutomaticCapture(1)
+
+    val conePresetCommand = HoldArmAngular(arm, thetaA = 216.degrees, thetaB = 355.degrees)
+    val cubePresetCommand = HoldArmAngular(arm, thetaA = 206.degrees, thetaB = 302.degrees)
+    val substationPresetCommand = HoldArmAngular(arm, thetaA = 142.degrees, thetaB = 167.degrees)
+    val restPresetCommand = HoldArmAngular(arm, thetaA = 109.degrees, thetaB = 122.degrees)
 
     private fun configureSubsystems() {
         left1.inverted = true
@@ -107,7 +119,7 @@ class RobotContainer {
         right2.burnFlash()
 
         arm.setDefaultRunCommand {
-            arm.moveVoltages(Arm.JointVoltages(operatorController.leftY, operatorController.rightY))
+            arm.moveVoltages(Arm.JointVoltages(operatorController.leftY * 6.0, operatorController.rightY * 6.0))
             arm.rotate((-cos((operatorController.pov + 90.0) * PI/180.0) * 0.05))
         }
 
@@ -115,18 +127,49 @@ class RobotContainer {
             intake.setCustomPower(operatorController.intakePower)
         }
 
-        driverController.intakeButton.whileHeld({ intake.forward() }, intake)
-        driverController.outtakeButton.whileHeld({ intake.reverse() }, intake)
-        operatorController.coneButton.whenPressed(InstantCommand { println("setting cone"); lights.setColor(Lights.Color.CONE) })
-        operatorController.cubeButton.whenPressed(InstantCommand { println("setting cube"); lights.setColor(Lights.Color.CUBE) })
-        operatorController.switchCommandButton.whenPressed(InstantCommand {
-            if (armCommand == null) {
-                armCommand = HoldArmAngular(arm, thetaA = 230.degrees, thetaB = 382.degrees).apply { schedule() }
-            } else {
-                armCommand?.cancel()
-                armCommand = null
-            }
-        })
+        driverController.intakeButton.whileHeld({ intake.intake() }, intake)
+        driverController.outtakeButton.whileHeld({ intake.outtake() }, intake)
+        operatorController.coneLightButton.whenPressed(InstantCommand { println("setting cone"); lights.setColor(Lights.Color.CONE) })
+        operatorController.cubeLightButton.whenPressed(InstantCommand { println("setting cube"); lights.setColor(Lights.Color.CUBE) })
+
+//        operatorController.conePresetButton.whenPressed(InstantCommand {
+//            if (armCommand == null) {
+//                armCommand = HoldArmAngular(arm, thetaA = 242.degrees, thetaB = 242.degrees + 146.degrees).apply { schedule() }
+//            } else {
+//                armCommand?.cancel()
+//                armCommand = null
+//            }
+//        })
+//
+//        operatorController.cubePresetButton.whenPressed(InstantCommand {
+//            if (armCommand == null) {
+//                armCommand = HoldArmAngular(arm, thetaA = 182.degrees, thetaB = 182.degrees + 32.degrees).apply { schedule() }
+//            } else {
+//                armCommand?.cancel()
+//                armCommand = null
+//            }
+//        })
+
+        // QQQQQQQQQQQQ
+        // Stow: 105, 6
+        // Cube: 182, 58
+        // Substation_mid: 159, 32
+        // Substation_close: 127, 23
+
+        // θθθθθθθθθθθθ
+        // Cone: 216, 355
+        // Cube: 206, 302
+        // Stow: 109, 122
+        // Substation_mid: 142, 167
+        // Substation_close: na
+
+        // Soft stop: Q1 = 91
+
+        operatorController.conePresetButton.whileHeld(conePresetCommand)
+        operatorController.cubePresetButton.whileHeld(cubePresetCommand)
+        operatorController.substationPresetButton.whileHeld(substationPresetCommand)
+        operatorController.restPresetButton.whileHeld(restPresetCommand)
+
 
         drivetrain.defaultCommand = RunCommand(drivetrain) {
             drivetrain.curvatureDrive(
@@ -156,16 +199,36 @@ class RobotContainer {
      *
      * @return the command to run in autonomous
      */
-    val autonomousCommand: Command
-        get() = buildCommand {
-            runSequentially {
-                runFor(4.5.seconds, drivetrain) {
-                    drivetrain.arcadeDrive(power = 0.25, rotation = 0.0)
-                }
+//    val autonomousCommand: Command get() = buildCommand {runForever(drivetrain) { drivetrain.curvatureDrive(0.0, 0.0)} }
+    val autonomousCommand: Command get() = buildCommand {
+        drivetrain.driveStraight(-6.inches, -0.2, PIDConstants(0.04, 0.0, 0.0))
+        runFor(5.seconds, HoldArmAngular(arm, thetaB = 302.degrees))
+        runFor(5.seconds, HoldArmAngular(arm, thetaA = 206.degrees))
+        drivetrain.driveStraight(6.inches, 0.2, PIDConstants(0.04, 0.0, 0.0))
+        waitFor(1.seconds)
+        runFor(3.seconds, RunCommand(intake) { intake.outtake() })
+        drivetrain.driveStraight(-2.meters, 0.2, PIDConstants(0.04, 0.0, 0.0))
+    }
 
-                runOnce(drivetrain) {
-                    drivetrain.arcadeDrive(0.0, 0.0)
-                }
-            }
+//        balanceRobotCommand
+//        get() = HoldArmAngular(arm,206.degrees,302.degrees)
+//            .andThen(InstantCommand(intake) { intake.intake() })
+//            .andThen(WaitCommand(0.25))
+//            .andThen(InstantCommand(intake) { intake.disable() })
+//            .andThen(driveReverseUntilInclineHitCommand)
+//            .andThen(balanceRobotCommand)
+
+    val driveReverseUntilInclineHitCommand = buildCommand {
+        runUntil({ navX.gyroscope.pitch > 10.0.degrees || navX.gyroscope.pitch < 10.0.degrees }, drivetrain) {
+            drivetrain.curvatureDrive(-0.5,0.0)
         }
+    }
+
+
+
+    val navX = NavX()
+    private val balanceRobotCommand = RunCommand(drivetrain) {
+        drivetrain.arcadeDrive(-sin(navX.gyroscope.pitch),0.0)
+    }
+
 }

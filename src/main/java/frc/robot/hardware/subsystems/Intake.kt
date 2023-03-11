@@ -18,7 +18,7 @@ class Intake(
         motorPower = power
     }
 
-    fun forward() {
+    fun intake() {
         motorPower = 0.5
     }
 
@@ -26,8 +26,8 @@ class Intake(
         motorPower = 0.0
     }
 
-    fun reverse() {
-        motorPower = -0.3
+    fun outtake() {
+        motorPower = -0.2
     }
 
     // this function is called repeatedly.

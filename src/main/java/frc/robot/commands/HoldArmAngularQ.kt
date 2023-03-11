@@ -11,30 +11,30 @@ import frc.chargers.controls.pid.PIDConstants
 import frc.chargers.controls.pid.UnitSuperPIDController
 import frc.robot.hardware.subsystems.Arm
 
-class HoldArmAngular(private val arm: Arm, thetaA: Angle = arm.thetaA, thetaB: Angle = arm.thetaB) : CommandBase() {
+class HoldArmAngularQ(private val arm: Arm, q1: Angle = arm.thetaA, q2: Angle = arm.thetaB) : CommandBase() {
     init {
         addRequirements(arm)
-        name = "Hold Position"
+        name = "Hold Position Q"
     }
 
     private val jointAPID =
         UnitSuperPIDController(
-            pidConstants = PIDConstants(7.0, 0.02, 0.0),
-            getInput = { arm.thetaA },
-            target = thetaA,
+            pidConstants = PIDConstants(4.0, 0.02, 0.0),
+            getInput = { arm.q1 },
+            target = q1,
             outputRange = Scalar(-6.0)..Scalar(6.0),
         )
 
     private val jointBPID =
         UnitSuperPIDController(
-            pidConstants = PIDConstants(8.0, 0.02, 0.0),
+            pidConstants = PIDConstants(2.0, 0.02, 0.0),
             getInput = { arm.thetaB },
-            target = thetaB,
+            target = q2,
             outputRange = Scalar(-6.0)..Scalar(6.0),
         )
 
     override fun execute() {
-        val outputA = -jointAPID.calculateOutput().value
+        val outputA = jointAPID.calculateOutput().value
         val outputB = -jointBPID.calculateOutput().value
 
 //        val (feedForwardA, feedForwardB) = arm.calculateStaticPowers()
