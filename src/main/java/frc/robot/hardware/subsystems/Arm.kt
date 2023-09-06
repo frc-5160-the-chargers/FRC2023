@@ -1,101 +1,155 @@
 package frc.robot.hardware.subsystems
 
 import com.batterystaple.kmeasure.quantities.*
-import com.batterystaple.kmeasure.units.Degrees
+import com.batterystaple.kmeasure.units.degrees
 import com.batterystaple.kmeasure.units.meters
 import com.batterystaple.kmeasure.units.radians
-import com.revrobotics.CANSparkMax
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.chargers.hardware.motorcontrol.EncoderMotorController
 import frc.chargers.hardware.sensors.encoders.PositionEncoder
 import frc.chargers.wpilibextensions.motorcontrol.speed
+import frc.robot.math.compareTo
 import frc.robot.math.cos
 import frc.robot.math.matrix.a
 import frc.robot.math.matrix.compileMultiline
 import frc.robot.math.sin
 import frc.robot.math.stallTorqueNmToVoltage
+import org.ejml.data.DMatrixRMaj
 import org.ejml.equation.Equation
+import org.ejml.simple.SimpleMatrix
+import kotlin.math.cos
+import kotlin.math.sin
 import org.ejml.data.DMatrixRMaj as M
 
+@Suppress("LongParameterList")
 class Arm(
-    private val jointAMotors: EncoderMotorController,
-    private val jointBMotor: EncoderMotorController,
-    private val swivelMotor: CANSparkMax, // TODO: Add current stuff to ChargerLib and make type some interface
+    private val proximalMotors: EncoderMotorController,
+    private val distalMotor: EncoderMotorController,
     jointAEncoder: PositionEncoder/*? = null*/,
     jointBEncoder: PositionEncoder/*? = null*/,
     private var jointAOffset: Angle,
     private var jointBOffset: Angle,
-    private val gearRatioA: Double, // TODO: Move to own encoder
+    private val gearRatioA: Double,
     private val gearRatioB: Double,
     val segmentALength: Distance,
     val segmentBLength: Distance,
-    private val jointSpeedMultiplier: Double = 1.0,
-) : SubsystemBase() { // TODO: motor encoder offsets
-    val jointAEncoder: PositionEncoder = jointAEncoder/* ?: jointAMotors.encoder*/
-    val jointBEncoder: PositionEncoder = jointBEncoder/* ?: jointBMotor.encoder*/
+    val q1SoftRange: ClosedRange<Angle>,
+    val q2SoftRange: ClosedRange<Angle>,
+) : SubsystemBase() {
+    private val jointAEncoder: PositionEncoder = jointAEncoder ?: proximalMotors.encoder
+    private val jointBEncoder: PositionEncoder = jointBEncoder ?: distalMotor.encoder
     private val encoderMultiplierA = if (jointAEncoder == null) gearRatioA else 1.0
     private val encoderMultiplierB = if (jointBEncoder == null) gearRatioB else 1.0
 
-    /*private*/ val q1: Angle get() = jointAEncoder.angularPosition * encoderMultiplierA + jointAOffset
-    /*private*/ val q2: Angle get() = jointBEncoder.angularPosition * encoderMultiplierB + jointBOffset
-//    private val qDot1: AngularVelocity get() = jointAMotors.encoder.angularVelocity * gearRatioA
-//    private val qDot2: AngularVelocity get() = jointBMotor.encoder.angularVelocity * gearRatioB
+    private var softStopEnabled = true
+
+    var q1: Angle get() = -jointAEncoder.angularPosition * encoderMultiplierA + jointAOffset
+        set(value) {
+            jointAOffset = value - q1
+        }
+    var q2: Angle get() = -jointBEncoder.angularPosition * encoderMultiplierB + jointBOffset
+        set(value) {
+            jointBOffset = value - q2
+        }
 
     val thetaA: Angle get() = q1
     val thetaB: Angle get() = q1 + q2
-//    val omegaA: AngularVelocity get() = qDot1
-//    val omegaB: AngularVelocity get() = qDot1 + qDot2
 
     val forward: Distance get() = segmentALength * cos(thetaA) + segmentBLength * cos(thetaB)
     val up: Distance get() = segmentALength * sin(thetaA) + segmentBLength * sin(thetaB)
 
+
     fun moveVoltages(voltages: JointVoltages) {
-        jointAMotors.setVoltage(voltages.jointAVoltage)
-        jointBMotor.setVoltage(voltages.jointBVoltage)
+        moveVoltages(voltages.jointAVoltage, voltages.jointBVoltage)
     }
 
-    fun moveAngles(omegaA: Double = 0.0, omegaB: Double = 0.0, rotation: Double = 0.0) {
-        jointAMotors.speed = omegaA
-        jointBMotor.speed = omegaB
+    fun moveVoltages(jointAVoltage: Double, jointBVoltage: Double) {
+        SmartDashboard.putNumber("Joint A Voltage (V)", jointAVoltage)
+        SmartDashboard.putNumber("Joint B Voltage (V)", jointBVoltage)
 
-        rotate(rotation)
-    }
-
-    fun rotate(rotation: Double) {
-        if (swivelMotor.outputCurrent > 1) {
-            swivelMotor.speed = 0.0
+        if (softStopEnabled && (jointAVoltage < 0 && q1 > q1SoftRange) || (jointAVoltage > 0 && q1 < q1SoftRange)) {
+            println("Soft Stopping!")
+            proximalMotors.setVoltage(0.0)
+        } else {
+            proximalMotors.setVoltage(jointAVoltage)
         }
 
-        swivelMotor.speed = rotation
+
+//        if (!(((jointAVoltage < 0 && thetaA < thetaASoftRange) || (jointAVoltage > 0 && thetaA > thetaASoftRange))) ) {
+//            proximalMotors.setVoltage(jointAVoltage)
+//        }
+        distalMotor.setVoltage(jointBVoltage)
     }
+
+//    private fun Double.withSoftStop(currentAngle: Angle, softStopRange: ClosedRange<Angle>) {
+//        if ()
+//    }
+
+    fun moveSpeeds(omegaA: Double = 0.0, omegaB: Double = 0.0) {
+        proximalMotors.speed = omegaA
+        distalMotor.speed = omegaB
+    }
+
+    fun moveCartesian(forward: Double, up: Double) {
+        val thetaDot = calculateThetaDot(DMatrixRMaj(a[forward, up]))
+
+        moveSpeeds(thetaDot[0], thetaDot[1])
+    }
+
+//    private fun shouldSoftStop()
 
     override fun periodic() {
         telemetry()
     }
 
     private fun telemetry() {
-        SmartDashboard.getNumber("Joint A Offset (º)", Double.NaN).takeIf { !it.isNaN() }?.ofUnit(Degrees)?.let {
+        SmartDashboard.getNumber("Joint A Offset (º)", Double.NaN).takeIf { !it.isNaN() }?.ofUnit(degrees)?.let {
             jointAOffset = it
         }
-        SmartDashboard.getNumber("Joint B Offset (º)", Double.NaN).takeIf { !it.isNaN() }?.ofUnit(Degrees)?.let {
+        SmartDashboard.getNumber("Joint B Offset (º)", Double.NaN).takeIf { !it.isNaN() }?.ofUnit(degrees)?.let {
             jointBOffset = it
         }
-        SmartDashboard.putNumber("Joint A Offset (º)", jointAOffset.inUnit(Degrees))
-        SmartDashboard.putNumber("Joint B Offset (º)", jointBOffset.inUnit(Degrees))
 
-        SmartDashboard.putNumber("Theta A (º)", thetaA.inUnit(Degrees))
-        SmartDashboard.putNumber("Theta B (º)", thetaB.inUnit(Degrees))
-//        SmartDashboard.putNumber("Omega A (º/s)", omegaA.inUnit(Degrees / seconds))
-//        SmartDashboard.putNumber("Omega B (º/s)", omegaB.inUnit(Degrees / seconds))
-        SmartDashboard.putNumber("Q1 (º)", q1.inUnit(Degrees))
-        SmartDashboard.putNumber("Q2 (º)", q2.inUnit(Degrees))
+        SmartDashboard.putNumber("Joint A Offset (º)", jointAOffset.inUnit(degrees))
+        SmartDashboard.putNumber("Joint B Offset (º)", jointBOffset.inUnit(degrees))
 
-        SmartDashboard.putNumber("Turret Current (A prob)", swivelMotor.outputCurrent)
+        SmartDashboard.putNumber("Theta A (º)", thetaA.inUnit(degrees))
+        SmartDashboard.putNumber("Theta B (º)", thetaB.inUnit(degrees))
+//        SmartDashboard.putNumber("Omega A (º/s)", omegaA.inUnit(degrees / seconds))
+//        SmartDashboard.putNumber("Omega B (º/s)", omegaB.inUnit(degrees / seconds))
+        SmartDashboard.putNumber("Q1 (º)", q1.inUnit(degrees))
+        SmartDashboard.putNumber("Q2 (º)", q2.inUnit(degrees))
+        SmartDashboard.putBoolean("Soft Stop Enabled", softStopEnabled)
 
     }
 
-    fun calculateStaticPowers(): JointVoltages {
+    @Suppress("VariableNaming", "Unused")
+    fun calculateThetaDot(v: DMatrixRMaj): DMatrixRMaj {
+        val thetaA = thetaA.inUnit(radians)
+        val thetaB = thetaB.inUnit(radians)
+        val lA = segmentALength.inUnit(meters)
+        val lB = segmentBLength.inUnit(meters)
+
+        val k = sin(thetaA - thetaB)
+
+        val J = DMatrixRMaj(a[
+            a[-cos(thetaB) /(lA * k),  sin(thetaB) /(lA * k)],
+            a[ cos(thetaA) /(lB * k), -sin(thetaA) /(lB * k)]
+        ])
+
+//        SimpleMatrix(J).mult(SimpleMatrix(v))
+
+        val theta_dot = SimpleMatrix(J).mult(SimpleMatrix(v))
+
+        return theta_dot.getMatrix()
+//        eq.alias(q1, "q1", q2, "q2", l1, "l1", l2, "l2", v, "v")
+//        calculateThetaDot.perform()
+//        return eq.lookupDDRM("theta_dot")
+    }
+
+    @Suppress("VariableNaming", "Unused", "NonAsciiCharacters")
+    private fun calculateStaticPowers(): JointVoltages {
         val l1 = segmentALength.inUnit(meters)
         val l2 = segmentBLength.inUnit(meters)
         val mα = 1.2
@@ -110,7 +164,7 @@ class Arm(
         )
         compiledGravityCompSequence.perform()
 
-        val torque = gravityCompEquation.lookupDDRM("τ") // TODO: destructuring declaration
+        val torque = gravityCompEquation.lookupDDRM("τ")
         val torqueA = torque[0]
         val torqueB = torque[1]
 
@@ -118,7 +172,7 @@ class Arm(
         val gearedTorqueB = torqueB * gearRatioB
 
         val voltageA = stallTorqueNmToVoltage(gearedTorqueA)
-//        val voltageA = stallTorqueNmToVoltage(gearedTorqueA/2) // TODO: for when two motors mounted
+//        val voltageA = stallTorqueNmToVoltage(gearedTorqueA/2) // for when two motors mounted
         val voltageB = stallTorqueNmToVoltage(gearedTorqueB)
 
         return JointVoltages(voltageA, voltageB)
@@ -140,36 +194,36 @@ class Arm(
         """
         g = [0, -9.81, 0]'
         q = [q1, q2]'
-        
+
         J_0AR = [kHat [0;0;0]]
         J_ABR = [[0;0;0] kHat]
         J_0BR = J_0AR + J_ABR
-        
+
         C_A0 = ( [cos(q(0)), -sin(q(0)), 0; sin(q(0)), cos(q(0)), 0; 0, 0, 0] )
         C_BA = ( [cos(q(1)), -sin(q(1)), 0; sin(q(1)), cos(q(1)), 0; 0, 0, 0] )
-        
+
         r_oa_A = [l1   0 0]'
         r_oα_A = [l1/2 0 0]'
         r_aβ_B = [l2/2 0 0]'
         r_aψ_B = [l2   0 0]'
-        
+
         r_oa_0 = C_A0 * r_oa_A
         r_oα_0 = C_A0 * r_oα_A
         r_aβ_0 = C_A0 * C_BA * r_aβ_B
         r_aψ_0 = C_A0 * C_BA * r_aψ_B
-        
+
         J_0AD = -crossMatrix(r_oa_0) * J_0AR
-        
+
         J_0αD = -crossMatrix(r_oα_0) * J_0AR
         J_0βD = J_0AD - crossMatrix(r_aβ_0) * J_0BR
         J_0ψD = J_0AD - crossMatrix(r_aψ_0) * J_0BR
-        
+
         F_gα = mα * g
         F_gβ = mβ * g
         F_gψ = mψ * g
 
         J_θ = [1 0; -1 1]
-        
+
         a = J_0αD' * F_gα
         b = J_0βD' * F_gβ
         c = J_0ψD' * F_gψ

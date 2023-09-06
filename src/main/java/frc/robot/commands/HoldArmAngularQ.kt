@@ -4,7 +4,7 @@ import com.batterystaple.kmeasure.quantities.Angle
 import com.batterystaple.kmeasure.quantities.Scalar
 import com.batterystaple.kmeasure.quantities.inUnit
 import com.batterystaple.kmeasure.quantities.value
-import com.batterystaple.kmeasure.units.Degrees
+import com.batterystaple.kmeasure.units.degrees
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
 import frc.chargers.controls.pid.PIDConstants
@@ -34,8 +34,10 @@ class HoldArmAngularQ(private val arm: Arm, q1: Angle = arm.thetaA, q2: Angle = 
         )
 
     override fun execute() {
-        val outputA = jointAPID.calculateOutput().value
-        val outputB = -jointBPID.calculateOutput().value
+        val outputA = -jointAPID.calculateOutput().value
+//        val outputB = -jointBPID.calculateOutput().value
+        val outputB = 0.0
+
 
 //        val (feedForwardA, feedForwardB) = arm.calculateStaticPowers()
         arm.moveVoltages(Arm.JointVoltages(outputA /*+ feedForwardA*/, outputB /*+ feedForwardB*/))
@@ -47,7 +49,7 @@ class HoldArmAngularQ(private val arm: Arm, q1: Angle = arm.thetaA, q2: Angle = 
         SmartDashboard.putNumber("PID output A", outputA)
         SmartDashboard.putNumber("PID output B", outputB)
 
-        SmartDashboard.putNumber("error A", jointAPID.error.inUnit(Degrees))
-        SmartDashboard.putNumber("error B", jointBPID.error.inUnit(Degrees))
+        SmartDashboard.putNumber("error A", jointAPID.error.inUnit(degrees))
+        SmartDashboard.putNumber("error B", jointBPID.error.inUnit(degrees))
     }
 }

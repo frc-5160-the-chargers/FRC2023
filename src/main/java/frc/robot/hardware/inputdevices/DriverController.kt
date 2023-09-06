@@ -12,11 +12,10 @@ class DriverController(
     private val rotationPowerScale: Double,
     private val shouldInvertStraightDriveDirection: Boolean = false,
     private val shouldInvertRotationDirection: Boolean = false,
-    private val turboModeMultiplierRange: ClosedRange<Double> = 1.0..2.0,
-    private val precisionModeDividerRange: ClosedRange<Double> = 1.0..4.0,
+    private val turboModeMultiplierRange: ClosedRange<Double>,
+    private val precisionModeDividerRange: ClosedRange<Double>,
 ) : ChargerController(port, deadband) {
-    val intakeButton = button(Button.kA)
-    val outtakeButton = button(Button.kB)
+    val switchCameraButton = button(Button.kX)
 
     val curvatureOutput: ChassisPowers get() {
         var forwardsPower = leftY.withDeadband()
@@ -30,6 +29,8 @@ class DriverController(
             rotationPower = -rotationPower * rotationPowerScale * turboModeMultiplier * precisionModeMultiplier
         )
     }
+
+    val driverStraightAssistEnabled: Boolean get() = leftY in -0.2..0.2
 
     private val turboModeMultiplier: Double get() =
         leftTriggerAxis

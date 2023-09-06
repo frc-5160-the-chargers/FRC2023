@@ -1,0 +1,13 @@
+config:
+  validation: true
+  warningsAsErrors: true
+
+style:
+  WildcardImport:
+    active: false
+  UnusedPrivateMember:
+    active: false
+  MaxLineLength:
+    excludeCommentStatements: true
+  MagicNumber:
+    active: false
