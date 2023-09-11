@@ -34,18 +34,16 @@ class Arm(
     val q1SoftRange: ClosedRange<Angle>,
     val q2SoftRange: ClosedRange<Angle>,
 ) : SubsystemBase() {
-    private val jointAEncoder: PositionEncoder = jointAEncoder ?: proximalMotors.encoder
-    private val jointBEncoder: PositionEncoder = jointBEncoder ?: distalMotor.encoder
-    private val encoderMultiplierA = if (jointAEncoder == null) gearRatioA else 1.0
-    private val encoderMultiplierB = if (jointBEncoder == null) gearRatioB else 1.0
+    private val jointAEncoder: PositionEncoder = jointAEncoder
+    private val jointBEncoder: PositionEncoder = jointBEncoder
 
     private var softStopEnabled = true
 
-    var q1: Angle get() = -jointAEncoder.angularPosition * encoderMultiplierA + jointAOffset
+    var q1: Angle get() = -jointAEncoder.angularPosition * gearRatioA + jointAOffset
         set(value) {
             jointAOffset = value - q1
         }
-    var q2: Angle get() = -jointBEncoder.angularPosition * encoderMultiplierB + jointBOffset
+    var q2: Angle get() = -jointBEncoder.angularPosition * gearRatioB + jointBOffset
         set(value) {
             jointBOffset = value - q2
         }
