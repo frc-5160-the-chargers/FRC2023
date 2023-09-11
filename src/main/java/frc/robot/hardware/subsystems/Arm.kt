@@ -1,20 +1,17 @@
 package frc.robot.hardware.subsystems
 
 import com.batterystaple.kmeasure.quantities.*
-import com.batterystaple.kmeasure.units.degrees
-import com.batterystaple.kmeasure.units.meters
-import com.batterystaple.kmeasure.units.radians
+import com.batterystaple.kmeasure.units.*
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.chargers.hardware.motorcontrol.EncoderMotorController
 import frc.chargers.hardware.sensors.encoders.PositionEncoder
+import frc.chargers.utils.a
 import frc.chargers.wpilibextensions.motorcontrol.speed
-import frc.robot.math.compareTo
-import frc.robot.math.cos
-import frc.robot.math.matrix.a
-import frc.robot.math.matrix.compileMultiline
-import frc.robot.math.sin
-import frc.robot.math.stallTorqueNmToVoltage
+import frc.chargers.utils.math.*
+import frc.chargers.utils.math.equations.compileMultiline
+import frc.chargers.utils.math.equations.stallTorqueToVoltage
+import frc.chargers.utils.p
 import org.ejml.data.DMatrixRMaj
 import org.ejml.equation.Equation
 import org.ejml.simple.SimpleMatrix
@@ -92,7 +89,7 @@ class Arm(
     }
 
     fun moveCartesian(forward: Double, up: Double) {
-        val thetaDot = calculateThetaDot(DMatrixRMaj(a[forward, up]))
+        val thetaDot = calculateThetaDot(DMatrixRMaj(p[forward, up]))
 
         moveSpeeds(thetaDot[0], thetaDot[1])
     }
@@ -134,8 +131,8 @@ class Arm(
         val k = sin(thetaA - thetaB)
 
         val J = DMatrixRMaj(a[
-            a[-cos(thetaB) /(lA * k),  sin(thetaB) /(lA * k)],
-            a[ cos(thetaA) /(lB * k), -sin(thetaA) /(lB * k)]
+            p[-cos(thetaB) /(lA * k),  sin(thetaB) /(lA * k)],
+            p[ cos(thetaA) /(lB * k), -sin(thetaA) /(lB * k)]
         ])
 
 //        SimpleMatrix(J).mult(SimpleMatrix(v))
@@ -171,20 +168,29 @@ class Arm(
         val gearedTorqueA = torqueA * gearRatioA
         val gearedTorqueB = torqueB * gearRatioB
 
-        val voltageA = stallTorqueNmToVoltage(gearedTorqueA)
+        val voltageA = stallTorqueToVoltage(gearedTorqueA.ofUnit(newtons*meters))
 //        val voltageA = stallTorqueNmToVoltage(gearedTorqueA/2) // for when two motors mounted
-        val voltageB = stallTorqueNmToVoltage(gearedTorqueB)
+        val voltageB = stallTorqueToVoltage(gearedTorqueB.ofUnit(newtons*meters))
 
-        return JointVoltages(voltageA, voltageB)
+        return JointVoltages(voltageA.inUnit(volts), voltageB.inUnit(volts))
     }
 
-    data class JointVoltages(val jointAVoltage: Double, val jointBVoltage: Double)
+    data class JointVoltages(val jointAVoltage: Double, val jointBVoltage: Double){
+        /*
+        constructor(jointAVoltage: Voltage, jointBVoltage: Voltage): this(
+            jointAVoltage.inUnit(volts),
+            jointBVoltage.inUnit(volts)
+        )
+
+         */
+    }
+
 
     private val gravityCompEquation = Equation().apply {
         process("macro crossMatrix( v ) = ( [0, -v(2), v(1); v(2), 0, -v(0); -v(1), v(0), 0] )")
-        val iHat = M(a[1.0, 0.0, 0.0])
-        val jHat = M(a[0.0, 1.0, 0.0])
-        val kHat = M(a[0.0, 0.0, 1.0])
+        val iHat = M(p[1.0, 0.0, 0.0])
+        val jHat = M(p[0.0, 1.0, 0.0])
+        val kHat = M(p[0.0, 0.0, 1.0])
 
         alias(iHat, "iHat", jHat, "jHat", kHat, "kHat")
         alias(0.0, "l1", 0.0, "l2", 0.0, "mα", 0.0, "mβ", 0.0, "mψ", 0.0, "q1", 0.0, "q2")

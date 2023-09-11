@@ -17,7 +17,7 @@ class HoldArmAngular(private val arm: Arm, thetaA: Angle = arm.thetaA, thetaB: A
         name = "Hold Position Angular"
     }
 
-    private val jointAPID =
+    val jointAPID =
         UnitSuperPIDController(
             pidConstants = PIDConstants(30.0, 0.02, 2.0),
             getInput = { arm.thetaA },
@@ -25,7 +25,7 @@ class HoldArmAngular(private val arm: Arm, thetaA: Angle = arm.thetaA, thetaB: A
             outputRange = Scalar(-12.0)..Scalar(12.0),
         )
 
-    private val jointBPID =
+    val jointBPID =
         UnitSuperPIDController(
             pidConstants = PIDConstants(15.0, 0.01, 0.7),
             getInput = { arm.thetaB },

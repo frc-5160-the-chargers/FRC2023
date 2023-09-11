@@ -19,7 +19,7 @@ fun DifferentialDrivetrain.driverStraightAssistCommand(forwardPower: () -> Doubl
         target = heading
     )
 
-    runForever(this@driverStraightAssistCommand) {
+    loopForever(this@driverStraightAssistCommand) {
         arcadeDrive(forwardPower(), turnPID.calculateOutput().value)
     }
 }

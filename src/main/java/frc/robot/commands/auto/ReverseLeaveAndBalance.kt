@@ -2,6 +2,7 @@ package frc.robot.commands.auto
 
 import com.batterystaple.kmeasure.quantities.abs
 import com.batterystaple.kmeasure.quantities.inUnit
+import com.batterystaple.kmeasure.quantities.sin
 import com.batterystaple.kmeasure.units.degrees
 import com.batterystaple.kmeasure.units.feet
 import com.batterystaple.kmeasure.units.seconds
@@ -11,23 +12,23 @@ import frc.chargers.constants.TurnPIDConstants
 import frc.chargers.hardware.sensors.NavX
 import frc.chargers.hardware.sensors.gyroscopes.HeadingProvider
 import frc.chargers.hardware.subsystems.drivetrain.EncoderDifferentialDrivetrain
-import frc.robot.math.sin
+
 
 private const val autoSpeed = 0.4
 fun EncoderDifferentialDrivetrain.taxiBalance(navX: NavX) = buildCommand {
-    runUntil({ navX.gyroscope.pitch-2.9.degrees < -10.degrees }, this@taxiBalance) {
+    loopUntil({ navX.gyroscope.pitch-2.9.degrees < -10.degrees }, this@taxiBalance) {
         curvatureDrive(autoSpeed,0.0)
     }
 
     printToConsole { "Pitch < -10 deg (${navX.gyroscope.pitch.inUnit(degrees)}" }
 
-    runUntil({ navX.gyroscope.pitch-2.9.degrees > 10.degrees }, this@taxiBalance) {
+    loopUntil({ navX.gyroscope.pitch-2.9.degrees > 10.degrees }, this@taxiBalance) {
         curvatureDrive(autoSpeed, 0.0)
     }
 
     printToConsole { "Pitch > 10 deg (${navX.gyroscope.pitch.inUnit(degrees)}" }
 
-    runUntil({ abs(navX.gyroscope.pitch-2.9.degrees) < 7.degrees }, this@taxiBalance) {
+    loopUntil({ abs(navX.gyroscope.pitch-2.9.degrees) < 7.degrees }, this@taxiBalance) {
         curvatureDrive(autoSpeed, 0.0)
     }
 
@@ -42,13 +43,13 @@ fun EncoderDifferentialDrivetrain.taxiBalance(navX: NavX) = buildCommand {
     }
 
     runParallelUntilOneFinishes {
-        runUntil({ abs(navX.gyroscope.pitch-2.9.degrees) > 10.0.degrees }, this@taxiBalance) {
+        loopUntil({ abs(navX.gyroscope.pitch-2.9.degrees) > 10.0.degrees }, this@taxiBalance) {
             arcadeDrive(-autoSpeed, 0.0)
         }
         waitFor(3.seconds)
     }
 
-    runForever(this@taxiBalance) {
+    loopForever(this@taxiBalance) {
         arcadeDrive(-0.675 * sin(navX.gyroscope.pitch-2.9.degrees),0.0)
     }
 }

@@ -9,12 +9,6 @@ import kotlin.math.sign
 
 class OperatorController(port: Int) : ChargerController(port) {
 
-    val conePresetButton = button(Button.kX)
-    val cubePresetButton = button(Button.kY)
-    val substationConePresetButton = button(Button.kB)
-    val restPresetButton = button(Button.kA)
-
-    val shiftButton = button(Button.kLeftBumper)
 
     val intakePower: Double get() =
         listOf(rightTriggerAxis * 0.5, -leftTriggerAxis * 0.3)
