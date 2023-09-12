@@ -9,10 +9,15 @@ import com.ctre.phoenix6.signals.NeutralModeValue
 import com.revrobotics.CANSparkMax
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
+import frc.chargers.commands.InstantCommand
 import frc.chargers.commands.buildCommand
+import frc.chargers.commands.drivetrainCommands.driveStraight
 import frc.chargers.commands.drivetrainCommands.followPath
 import frc.chargers.commands.setDefaultRunCommand
+import frc.chargers.controls.pid.PIDConstants
+import frc.chargers.controls.pid.UnitSuperPIDController
 import frc.chargers.hardware.inputdevices.CurvatureDriveController
+import frc.chargers.hardware.inputdevices.withDeadbandOf
 import frc.chargers.hardware.motorcontrol.EncoderMotorControllerGroup
 import frc.chargers.hardware.motorcontrol.ctre.falcon
 import frc.chargers.hardware.motorcontrol.rev.neoSparkMax
@@ -24,7 +29,6 @@ import frc.chargers.hardware.subsystems.drivetrain.sparkMaxDrivetrain
 import frc.chargers.wpilibextensions.autoChooser
 import frc.chargers.wpilibextensions.geometry.LinearTrapezoidProfile
 import frc.robot.commands.HoldArmCartesian
-import frc.robot.commands.auto.driveBack
 import frc.robot.commands.auto.scoreTaxi
 import frc.robot.commands.auto.scoreTaxiBalance
 import frc.robot.commands.auto.taxiBalance
@@ -37,12 +41,23 @@ import kotlin.math.abs
 import kotlin.math.cos
 
 
-/** The container for the robot. Contains subsystems, OI devices, and commands.  */
+/**
+ * Test
+ */
 class RobotContainer {
-    private val left1  = neoSparkMax(canBusId = 12)
-    private val left2  = neoSparkMax(canBusId = 11)
-    private val right1 = neoSparkMax(canBusId = 15)
-    private val right2 = neoSparkMax(canBusId = 9)
+    private val left1  = neoSparkMax(canBusId = 12){
+        inverted = true
+    }
+    private val left2  = neoSparkMax(canBusId = 11){
+        inverted = true
+    }
+    private val right1 = neoSparkMax(canBusId = 15){
+        inverted = false
+    }
+    private val right2 = neoSparkMax(canBusId = 9){
+        inverted = false
+    }
+
 
     //    // The robot's subsystems and commands are defined here...
     private val drivetrain: EncoderDifferentialDrivetrain = sparkMaxDrivetrain(
@@ -63,7 +78,10 @@ class RobotContainer {
         voltageCompensationNominalVoltage = 10.volts
     }
 
-    private val intake = Intake(neoSparkMax(8) { inverted = true }, neoSparkMax(22) { inverted = false })
+    private val intake = Intake(
+        neoSparkMax(8) { inverted = true },
+        neoSparkMax(22) { inverted = false }
+    )
 
     /*
     private val driverController = DriverController(
@@ -119,6 +137,17 @@ class RobotContainer {
     private val navX = NavX()
 //    private val limelight = Limelight()
 
+    private val driveStraightAssistController =
+        UnitSuperPIDController(
+            PIDConstants(0.2,0.0,0.0),
+            {navX.heading},
+            outputRange = Scalar(-1.0)..Scalar(1.0),
+            target = navX.heading
+        )
+    private var driveStraightAssistEnabled: Boolean = false
+
+
+
     init {
         configureSubsystems()
         configureButtonBindings()
@@ -146,15 +175,6 @@ class RobotContainer {
 
 
 
-
-        left1.inverted = true
-        left2.inverted = true
-        right1.inverted = false
-        right2.inverted = false
-        println(left1.setIdleMode(CANSparkMax.IdleMode.kBrake))
-        println(left2.setIdleMode(CANSparkMax.IdleMode.kBrake))
-        println(right1.setIdleMode(CANSparkMax.IdleMode.kBrake))
-        println(right2.setIdleMode(CANSparkMax.IdleMode.kBrake))
         println(left1.voltageCompensationNominalVoltage)
         println(left2.voltageCompensationNominalVoltage)
         println(right1.voltageCompensationNominalVoltage)
@@ -183,14 +203,23 @@ class RobotContainer {
 //        )
 
         drivetrain.setDefaultRunCommand {
-            var turnPower: Double = driverController.curvatureOutput.rotationPower
+            var turnPower: Double
+            if (driveStraightAssistEnabled){
+                SmartDashboard.putBoolean("Drive straight assist",true)
+                turnPower = driveStraightAssistController.calculateOutput().siValue
+            }else{
+                SmartDashboard.putBoolean("Drive straight assist",false)
 
-            if (abs(driverController.curvatureOutput.rotationPower) < 0.1) {
-                SmartDashboard.putBoolean("milena mode", true)
-                turnPower += (-cos((operatorController.povValue + 90.0) * PI / 180.0) * 0.2)
-                                .let { if (abs(it) < 0.05) 0.0 else it }
-            } else {
-                SmartDashboard.putBoolean("milena mode", false)
+                turnPower = driverController.curvatureOutput.rotationPower
+                if (abs(driverController.curvatureOutput.rotationPower) < 0.1) {
+                    SmartDashboard.putBoolean("milena mode", true)
+                    turnPower += (-cos((operatorController.povValue + 90.0) * PI / 180.0) * 0.2)
+                        .withDeadbandOf(driverController)
+                } else {
+                    SmartDashboard.putBoolean("milena mode", false)
+                }
+                // syncs the controller every loop
+                driveStraightAssistController.calculateOutput()
             }
 
             curvatureDrive(
@@ -203,6 +232,16 @@ class RobotContainer {
     }
 
     private fun configureButtonBindings() {
+
+        driverController.apply{
+            x{
+                onTrue(InstantCommand{
+                    driveStraightAssistController.target = navX.heading
+                    driveStraightAssistEnabled = true
+                })
+                onFalse(InstantCommand{driveStraightAssistEnabled = false})
+            }
+        }
         /*
     val conePresetButton = button(Button.kX)
     val cubePresetButton = button(Button.kY)
@@ -229,14 +268,25 @@ class RobotContainer {
             }
             // rest preset button
             a{
-                onTrue(arm.moveToAngular(thetaA = 133.degrees, thetaB = 0.degrees))
+                whileTrue(arm.moveToAngular(thetaA = 133.degrees, thetaB = 0.degrees))
             }
         }
 
     }
 
 
-    private val autoChooser = autoChooser {
+    private val autoChooser = autoChooser(defaultKey = "drive back") {
+        "Taxi and Balance" to drivetrain.taxiBalance(navX)
+        "Score, Taxi, Balance" to drivetrain.scoreTaxiBalance(arm, intake, navX)
+        with(navX.gyroscope as HeadingProvider) {
+            "Score and Taxi" to drivetrain.scoreTaxi(arm, intake)
+        }
+        "drive back" to buildCommand{
+            with(navX.gyroscope as HeadingProvider) {
+                drivetrain.driveStraight(3.5.meters, 0.2, PIDConstants(0.04, 0.0, 0.0))
+            }
+        }
+        /*
         addOption("Taxi and Balance", drivetrain.taxiBalance(navX))
         addOption("Score, Taxi, Balance", drivetrain.scoreTaxiBalance(arm, intake, navX))
         addOption("Score and Taxi",
@@ -256,8 +306,13 @@ class RobotContainer {
         })
         setDefaultOption(
             "Drive Back",
-            with(navX.gyroscope as HeadingProvider) { drivetrain.driveBack() }
+            buildCommand{
+                with(navX.gyroscope as HeadingProvider) {
+                    drivetrain.driveStraight(3.5.meters, 0.2, PIDConstants(0.04, 0.0, 0.0))
+                }
+            }
         )
+         */
     }
 
     /**

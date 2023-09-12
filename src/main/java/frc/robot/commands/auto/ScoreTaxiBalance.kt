@@ -18,7 +18,7 @@ import frc.robot.hardware.subsystems.Intake
 
 private const val autoSpeed = 0.4
 fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, navX: NavX) = buildCommand {
-    +arm.moveToAngular(thetaA = 60.degrees, thetaB = 9.degrees).withTimeout(2.0)
+    +(arm.moveToAngular(thetaA = 60.degrees, thetaB = 9.degrees).withTimeout(2.0))
 
     loopFor(0.5.seconds, intake) {
         intake.setCustomPower(-0.25)
@@ -72,7 +72,13 @@ fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, nav
         waitFor(3.seconds)
     }
 
-    loopForever(this@scoreTaxiBalance) {
+    loopFor(5.seconds,this@scoreTaxiBalance) {
         arcadeDrive(-0.675 * sin(navX.gyroscope.pitch-2.9.degrees),0.0)
     }
+
+    loopForever(this@scoreTaxiBalance) {
+        arcadeDrive(-0.2 * sin(navX.gyroscope.pitch-2.9.degrees),0.0)
+    }
+
+
 }

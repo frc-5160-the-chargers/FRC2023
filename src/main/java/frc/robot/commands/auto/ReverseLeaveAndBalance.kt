@@ -49,7 +49,11 @@ fun EncoderDifferentialDrivetrain.taxiBalance(navX: NavX) = buildCommand {
         waitFor(3.seconds)
     }
 
-    loopForever(this@taxiBalance) {
+    loopFor(5.seconds,this@taxiBalance) {
         arcadeDrive(-0.675 * sin(navX.gyroscope.pitch-2.9.degrees),0.0)
+    }
+
+    loopForever(this@taxiBalance) {
+        arcadeDrive(-0.3 * sin(navX.gyroscope.pitch-2.9.degrees),0.0)
     }
 }

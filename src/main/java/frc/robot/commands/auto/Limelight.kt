@@ -1,4 +1,4 @@
-//package frc.robot.commands.auto
+package frc.robot.commands.auto
 //
 //import com.batterystaple.kmeasure.quantities.Distance
 //import com.batterystaple.kmeasure.quantities.inUnit
