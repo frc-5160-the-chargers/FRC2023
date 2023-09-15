@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.CommandBase
 import frc.chargers.controls.pid.PIDConstants
 import frc.chargers.controls.pid.UnitSuperPIDController
 import frc.robot.hardware.subsystems.Arm
-
+/*
 class HoldArmAngularQ(private val arm: Arm, q1: Angle = arm.thetaA, q2: Angle = arm.thetaB) : CommandBase() {
     init {
         addRequirements(arm)
@@ -53,3 +53,5 @@ class HoldArmAngularQ(private val arm: Arm, q1: Angle = arm.thetaA, q2: Angle = 
         SmartDashboard.putNumber("error B", jointBPID.error.inUnit(degrees))
     }
 }
+
+ */

@@ -2,7 +2,6 @@ package frc.robot.commands.auto
 
 import com.batterystaple.kmeasure.quantities.abs
 import com.batterystaple.kmeasure.quantities.inUnit
-import com.batterystaple.kmeasure.quantities.sin
 import com.batterystaple.kmeasure.units.degrees
 import com.batterystaple.kmeasure.units.feet
 import com.batterystaple.kmeasure.units.seconds
@@ -12,14 +11,16 @@ import frc.chargers.constants.TurnPIDConstants
 import frc.chargers.hardware.sensors.NavX
 import frc.chargers.hardware.sensors.gyroscopes.HeadingProvider
 import frc.chargers.hardware.subsystems.drivetrain.EncoderDifferentialDrivetrain
-import frc.robot.commands.moveToAngular
+//import frc.robot.commands.moveToAngular
+import frc.robot.commands.scoreLow
 import frc.robot.hardware.subsystems.Arm
 import frc.robot.hardware.subsystems.Intake
 
 private const val autoSpeed = 0.4
 fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, navX: NavX) = buildCommand {
-    +(arm.moveToAngular(thetaA = 60.degrees, thetaB = 9.degrees).withTimeout(2.0))
+    //+(arm.moveToAngular(thetaA = 60.degrees, thetaB = 9.degrees).withTimeout(2.0))
 
+    /*
     loopFor(0.5.seconds, intake) {
         intake.setCustomPower(-0.25)
     }
@@ -28,6 +29,9 @@ fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, nav
         arm.moveSpeeds(omegaA = 0.0, omegaB = -0.4)
         intake.setCustomPower(0.0)
     }
+    */
+
+    +arm.scoreLow(intake)
 
 //    runUntilFinish(arm.moveToAngular(thetaA = 60.degrees, thetaB = 40.degrees).withTimeout(0.8))
 
@@ -36,7 +40,7 @@ fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, nav
             curvatureDrive(autoSpeed, 0.0)
         }
 
-        +arm.moveToAngular(thetaA = 133.degrees, thetaB = 0.degrees)
+        //+arm.moveToAngular(thetaA = 133.degrees, thetaB = 0.degrees)
     }
 
     printToConsole { "Pitch < -10 deg (${navX.gyroscope.pitch.inUnit(degrees)}" }
@@ -46,7 +50,7 @@ fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, nav
             curvatureDrive(autoSpeed, 0.0)
         }
 
-        +arm.moveToAngular(thetaA = 133.degrees, thetaB = 0.degrees)
+        //+arm.moveToAngular(thetaA = 133.degrees, thetaB = 0.degrees)
     }
 
     printToConsole { "Pitch > 10 deg (${navX.gyroscope.pitch.inUnit(degrees)}" }
@@ -72,13 +76,7 @@ fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, nav
         waitFor(3.seconds)
     }
 
-    loopFor(5.seconds,this@scoreTaxiBalance) {
-        arcadeDrive(-0.675 * sin(navX.gyroscope.pitch-2.9.degrees),0.0)
-    }
-
-    loopForever(this@scoreTaxiBalance) {
-        arcadeDrive(-0.2 * sin(navX.gyroscope.pitch-2.9.degrees),0.0)
-    }
+    +this@scoreTaxiBalance.balance(navX.gyroscope)
 
 
 }

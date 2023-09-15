@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.CommandBase
 import frc.chargers.controls.pid.PIDConstants
 import frc.chargers.controls.pid.UnitSuperPIDController
 import frc.robot.hardware.subsystems.Arm
-
+/*
 class HoldArmCartesian(
     private val arm: Arm,
     private val forward: Distance = arm.forward,
@@ -65,3 +65,4 @@ class HoldArmCartesian(
         SmartDashboard.putNumber("error B (m)", upPID.error.inUnit(meters))
     }
 }
+ */

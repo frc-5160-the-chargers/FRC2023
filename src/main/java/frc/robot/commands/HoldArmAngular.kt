@@ -11,6 +11,7 @@ import frc.chargers.controls.pid.PIDConstants
 import frc.chargers.controls.pid.UnitSuperPIDController
 import frc.robot.hardware.subsystems.Arm
 
+/*
 class HoldArmAngular(private val arm: Arm, thetaA: Angle = arm.thetaA, thetaB: Angle = arm.thetaB) : CommandBase() {
     init {
         addRequirements(arm)
@@ -52,3 +53,5 @@ class HoldArmAngular(private val arm: Arm, thetaA: Angle = arm.thetaA, thetaB: A
         SmartDashboard.putNumber("error B (º)", jointBPID.error.inUnit(degrees))
     }
 }
+
+ */

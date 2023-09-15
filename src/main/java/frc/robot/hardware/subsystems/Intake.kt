@@ -9,8 +9,11 @@ class Intake(
     private val motorOne: ChargerCANSparkMax,
     private val motorTwo: ChargerCANSparkMax,
     private val motorOneMultiplier: Double = 1.0,
-    private val motorTwoMultiplier: Double = 1.0
+    private val motorTwoMultiplier: Double = 1.0,
+    private val passiveSpeed: Double = 0.0
 ) : SubsystemBase() {
+
+    var passiveSpeedEnabled: Boolean = false
 
     private var motorPower: Double = 0.0;
 
@@ -34,6 +37,13 @@ class Intake(
     override fun periodic() {
         motorOne.speed = motorPower*motorOneMultiplier
         motorTwo.speed = motorPower*motorTwoMultiplier
+
+        if (passiveSpeedEnabled) {
+            if(motorOne.speed == 0.0) motorOne.speed = passiveSpeed
+            if(motorTwo.speed == 0.0) motorTwo.speed = passiveSpeed
+        }
+
+
 
         telemetry()
     }

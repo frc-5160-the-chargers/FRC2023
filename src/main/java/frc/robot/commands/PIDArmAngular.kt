@@ -5,13 +5,36 @@ import com.batterystaple.kmeasure.quantities.Scalar
 import com.batterystaple.kmeasure.quantities.inUnit
 import com.batterystaple.kmeasure.quantities.value
 import com.batterystaple.kmeasure.units.degrees
+import com.batterystaple.kmeasure.units.seconds
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
+import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandBase
+import frc.chargers.commands.buildCommand
 import frc.chargers.controls.pid.PIDConstants
 import frc.chargers.controls.pid.UnitSuperPIDController
 import frc.robot.hardware.subsystems.Arm
+import frc.robot.hardware.subsystems.Intake
 
+fun Arm.scoreLow(intake: Intake): Command = buildCommand{
+    loopFor(0.1.seconds,this@scoreLow){
+        moveVoltages(0.0,1.0)
+    }
 
+    loopFor(0.5.seconds, intake) {
+        intake.setCustomPower(-0.4)
+    }
+
+    loopFor(0.06.seconds,this@scoreLow){
+        moveVoltages(0.0,-1.0)
+        intake.setCustomPower(0.0)
+    }
+
+    runOnce(this@scoreLow){
+        moveSpeeds(0.0,0.0)
+    }
+}
+
+/*
 fun Arm.holdAngular(): PIDArmAngular = PIDArmAngular(
     this,
     thetaA,
@@ -103,3 +126,4 @@ class PIDArmAngular(
 //        }
     }
 }
+ */

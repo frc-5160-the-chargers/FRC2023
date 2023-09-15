@@ -23,8 +23,8 @@ import org.ejml.data.DMatrixRMaj as M
 class Arm(
     private val proximalMotors: EncoderMotorController,
     private val distalMotor: EncoderMotorController,
-    jointAEncoder: PositionEncoder/*? = null*/,
-    jointBEncoder: PositionEncoder/*? = null*/,
+    private val jointAEncoder: PositionEncoder = proximalMotors.encoder,
+    private val jointBEncoder: PositionEncoder = distalMotor.encoder,
     private var jointAOffset: Angle,
     private var jointBOffset: Angle,
     private val gearRatioA: Double,
@@ -34,8 +34,8 @@ class Arm(
     val q1SoftRange: ClosedRange<Angle>,
     val q2SoftRange: ClosedRange<Angle>,
 ) : SubsystemBase() {
-    private val jointAEncoder: PositionEncoder = jointAEncoder
-    private val jointBEncoder: PositionEncoder = jointBEncoder
+
+
 
     private var softStopEnabled = true
 

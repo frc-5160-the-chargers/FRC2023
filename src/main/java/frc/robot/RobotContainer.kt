@@ -9,10 +9,11 @@ import com.ctre.phoenix6.signals.NeutralModeValue
 import com.revrobotics.CANSparkMax
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.PrintCommand
 import frc.chargers.commands.InstantCommand
 import frc.chargers.commands.buildCommand
 import frc.chargers.commands.drivetrainCommands.driveStraight
-import frc.chargers.commands.drivetrainCommands.followPath
+//import frc.chargers.commands.drivetrainCommands.followPath
 import frc.chargers.commands.setDefaultRunCommand
 import frc.chargers.controls.pid.PIDConstants
 import frc.chargers.controls.pid.UnitSuperPIDController
@@ -27,12 +28,13 @@ import frc.chargers.hardware.sensors.gyroscopes.HeadingProvider
 import frc.chargers.hardware.subsystems.drivetrain.EncoderDifferentialDrivetrain
 import frc.chargers.hardware.subsystems.drivetrain.sparkMaxDrivetrain
 import frc.chargers.wpilibextensions.autoChooser
+import frc.chargers.wpilibextensions.dashboardChooser
 import frc.chargers.wpilibextensions.geometry.LinearTrapezoidProfile
-import frc.robot.commands.HoldArmCartesian
+//import frc.robot.commands.HoldArmCartesian
 import frc.robot.commands.auto.scoreTaxi
 import frc.robot.commands.auto.scoreTaxiBalance
 import frc.robot.commands.auto.taxiBalance
-import frc.robot.commands.moveToAngular
+//import frc.robot.commands.moveToAngular
 import frc.robot.hardware.inputdevices.OperatorController
 import frc.robot.hardware.subsystems.Arm
 import frc.robot.hardware.subsystems.Intake
@@ -45,16 +47,16 @@ import kotlin.math.cos
  * Test
  */
 class RobotContainer {
-    private val left1  = neoSparkMax(canBusId = 12){
+    private val left1  = neoSparkMax(canBusId = ID.drive_left1){
         inverted = true
     }
-    private val left2  = neoSparkMax(canBusId = 11){
+    private val left2  = neoSparkMax(canBusId = ID.drive_left2){
         inverted = true
     }
-    private val right1 = neoSparkMax(canBusId = 15){
+    private val right1 = neoSparkMax(canBusId = ID.drive_right1){
         inverted = false
     }
-    private val right2 = neoSparkMax(canBusId = 9){
+    private val right2 = neoSparkMax(canBusId = ID.drive_right2){
         inverted = false
     }
 
@@ -79,8 +81,9 @@ class RobotContainer {
     }
 
     private val intake = Intake(
-        neoSparkMax(8) { inverted = true },
-        neoSparkMax(22) { inverted = false }
+        neoSparkMax(ID.intake_left) { inverted = true },
+        neoSparkMax(ID.intake_right) { inverted = false },
+        passiveSpeed = -0.1
     )
 
     /*
@@ -104,30 +107,35 @@ class RobotContainer {
     )
     private val operatorController = OperatorController(port = 1)
 
-    private val proximalCANCoder = ChargerCANcoder(44){
+    /*
+    private val proximalCANCoder = ChargerCANcoder(ID.arm_jointa_encoder_proximal){
         absoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1
         magnetOffset = 180.degrees
     }
-    private val distalCANCoder = ChargerCANcoder(43){
+    private val distalCANCoder = ChargerCANcoder(ID.arm_jointb_encoder_distal){
         absoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1
         magnetOffset = -(50.degrees)
     }
+     */
 
     private val arm = Arm(
         proximalMotors = EncoderMotorControllerGroup(
-            neoSparkMax(7),
-//            neoSparkMax(4),
+            neoSparkMax(ID.arm_proximal_one),
+            neoSparkMax(ID.arm_proximal_two),
         ),
         distalMotor = EncoderMotorControllerGroup(
-            falcon(20) { neutralMode = NeutralModeValue.Brake },
-            encoder = distalCANCoder
+            falcon(ID.arm_distal) { neutralMode = NeutralModeValue.Brake },
+            /*encoder = distalCANCoder*/
         ),
+        /*
         jointAEncoder = proximalCANCoder.absolute,
         jointBEncoder = distalCANCoder.absolute,
+         */
         jointAOffset = 0.0.degrees,
         jointBOffset = 0.0.degrees,
         gearRatioA = 1.0 / (8.46 * 70.0/24.0 * 70.0/24.0 * 4.0),
-        gearRatioB = 1.0 / (180.0 * 28.0/15.0),
+        // 125 is the falcon gear ratio(was 180 went to 135, and is now 125)
+        gearRatioB = 1.0 / (125.0 * 28.0/15.0),
         segmentALength = 37.inches,
         segmentBLength = 19.inches,
         q1SoftRange = 10.degrees..133.degrees,
@@ -186,12 +194,21 @@ class RobotContainer {
 
 
         arm.setDefaultRunCommand {
-            moveVoltages(operatorController.armVoltages)
+            // checks if all abort is enabled!
+            if (allAbortChooser.selected){
+                moveSpeeds(0.0,0.0)
+            }else{
+                moveVoltages(operatorController.armVoltages)
+            }
         }
 
 
         intake.setDefaultRunCommand {
-            setCustomPower(operatorController.intakePower)
+            if (allAbortChooser.selected){
+                setCustomPower(0.0)
+            }else{
+                setCustomPower(operatorController.intakePower)
+            }
         }
 
         SmartDashboard.putBoolean("milena mode", false)
@@ -252,7 +269,16 @@ class RobotContainer {
 
      */
 
+        operatorController.apply{
+            a{
+                onTrue(InstantCommand{
+                    intake.passiveSpeedEnabled = !intake.passiveSpeedEnabled
+                })
+            }
+        }
 
+
+        /*
         operatorController.apply{
             // cone preset button
             x{
@@ -270,8 +296,18 @@ class RobotContainer {
             a{
                 whileTrue(arm.moveToAngular(thetaA = 133.degrees, thetaB = 0.degrees))
             }
-        }
 
+            // back intake preset: tbd
+            backButton{
+                whileTrue(arm.moveToAngular(thetaA = 0.degrees, thetaB = 0.degrees))
+            }
+        }
+         */
+
+    }
+
+    private val allAbortChooser = dashboardChooser(name = "ALL ABORT for robot", "DISABLED" to false){
+        "ENABLE ABORT!" to true
     }
 
 
@@ -279,14 +315,18 @@ class RobotContainer {
         "Taxi and Balance" to drivetrain.taxiBalance(navX)
         "Score, Taxi, Balance" to drivetrain.scoreTaxiBalance(arm, intake, navX)
         with(navX.gyroscope as HeadingProvider) {
+
             "Score and Taxi" to drivetrain.scoreTaxi(arm, intake)
-        }
-        "drive back" to buildCommand{
-            with(navX.gyroscope as HeadingProvider) {
+
+            "drive back" to buildCommand{
                 drivetrain.driveStraight(3.5.meters, 0.2, PIDConstants(0.04, 0.0, 0.0))
             }
+
         }
-        /*
+
+    }
+
+    /*
         addOption("Taxi and Balance", drivetrain.taxiBalance(navX))
         addOption("Score, Taxi, Balance", drivetrain.scoreTaxiBalance(arm, intake, navX))
         addOption("Score and Taxi",
@@ -313,14 +353,24 @@ class RobotContainer {
             }
         )
          */
-    }
 
     /**
      * Use this to pass the autonomous command to the main [Robot] class.
      *
      * @return the command to run in autonomous
      */
-    val autonomousCommand: Command? get() = autoChooser.selected
+
+    /*
+    val autonomousCommand: Command? get() = autoChooser.selected.also{
+        SmartDashboard.putBoolean("auto is not null!", it != null)
+    }
+     */
+
+    val autonomousCommand: Command
+        get() = PrintCommand("auto test").repeatedly()
+
+
+
 
 
 
