@@ -16,14 +16,14 @@ class OperatorController(port: Int) : ChargerController(port) {
             .firstOrNull { abs(it) > 0.05 } ?: 0.0
 
     private fun armPowerCurve(x: Double) = sign(x) * x.pow(2)
+    // proximal
     val jointAPower get() = -armPowerCurve(leftY)
-    val jointBPower get() = armPowerCurve(rightY)
+    // distal
+    val jointBPower get() = 0.75 * armPowerCurve(rightY)
 
     val armVoltages: Arm.JointVoltages get() = Arm.JointVoltages(
         jointAVoltage = jointAPower * 10.0,
         jointBVoltage = jointBPower * 10.0
-    ).also{
-        SmartDashboard.putNumber("Joint A desired volts",jointAPower * 10.0)
-        SmartDashboard.putNumber("Joint B desired volts",jointBPower * 10.0)
-    }
+    )
+
 }

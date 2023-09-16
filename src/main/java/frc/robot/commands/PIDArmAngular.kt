@@ -21,7 +21,7 @@ fun Arm.scoreLow(intake: Intake): Command = buildCommand{
     }
 
     loopFor(0.5.seconds, intake) {
-        intake.setCustomPower(-0.4)
+        intake.setCustomPower(-0.25)
     }
 
     loopFor(0.06.seconds,this@scoreLow){

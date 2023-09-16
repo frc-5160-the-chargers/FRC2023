@@ -4,9 +4,11 @@ package frc.robot
 
 import com.batterystaple.kmeasure.quantities.*
 import com.batterystaple.kmeasure.units.*
+import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.revrobotics.CANSparkMax
+import com.revrobotics.CANSparkMaxLowLevel
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.PrintCommand
@@ -60,17 +62,21 @@ class RobotContainer {
         inverted = false
     }
 
+    private val leftMotors = EncoderMotorControllerGroup(
+        left1,
+        left2
+    )
+
+    private val rightMotors = EncoderMotorControllerGroup(
+        right1,
+        right2,
+    )
+
 
     //    // The robot's subsystems and commands are defined here...
     private val drivetrain: EncoderDifferentialDrivetrain = sparkMaxDrivetrain(
-        leftMotors = EncoderMotorControllerGroup(
-            left1,
-            left2
-        ),
-        rightMotors = EncoderMotorControllerGroup(
-            right1,
-            right2,
-        ),
+        leftMotors = leftMotors,
+        rightMotors = rightMotors,
         invertMotors = false,
         gearRatio = 1.0/10.71,
         wheelDiameter = 6.inches,
@@ -118,13 +124,19 @@ class RobotContainer {
     }
      */
 
+    private val proximalMotors = EncoderMotorControllerGroup(
+        neoSparkMax(ID.arm_proximal_one),
+        neoSparkMax(ID.arm_proximal_two){inverted = true; idleMode = CANSparkMax.IdleMode.kBrake},
+    )
+
     private val arm = Arm(
-        proximalMotors = EncoderMotorControllerGroup(
-            neoSparkMax(ID.arm_proximal_one),
-            neoSparkMax(ID.arm_proximal_two),
-        ),
+        proximalMotors = proximalMotors,
         distalMotor = EncoderMotorControllerGroup(
-            falcon(ID.arm_distal) { neutralMode = NeutralModeValue.Brake },
+            falcon(ID.arm_distal) { neutralMode = NeutralModeValue.Brake }.also{
+                val configuration = TalonFXConfiguration()
+                configuration.MotorOutput.NeutralMode = NeutralModeValue.Brake
+                it.configurator.apply(configuration)
+            },
             /*encoder = distalCANCoder*/
         ),
         /*
@@ -200,6 +212,8 @@ class RobotContainer {
             }else{
                 moveVoltages(operatorController.armVoltages)
             }
+            SmartDashboard.putNumber("Joint A desired volts",operatorController.jointAPower * 10.0)
+            SmartDashboard.putNumber("Joint B desired volts",operatorController.jointBPower * 10.0)
         }
 
 
@@ -314,7 +328,9 @@ class RobotContainer {
     private val autoChooser = autoChooser(defaultKey = "drive back") {
         "Taxi and Balance" to drivetrain.taxiBalance(navX)
         "Score, Taxi, Balance" to drivetrain.scoreTaxiBalance(arm, intake, navX)
-        with(navX.gyroscope as HeadingProvider) {
+
+
+        with(drivetrain as HeadingProvider) {
 
             "Score and Taxi" to drivetrain.scoreTaxi(arm, intake)
 
@@ -323,6 +339,9 @@ class RobotContainer {
             }
 
         }
+
+
+
 
     }
 
@@ -366,8 +385,13 @@ class RobotContainer {
     }
      */
 
-    val autonomousCommand: Command
-        get() = PrintCommand("auto test").repeatedly()
+
+    val autonomousCommand: Command?
+        get() = buildCommand{
+            loopForever(drivetrain){
+                leftMotors.set(0.3)
+            }
+        }
 
 
 

@@ -4,7 +4,7 @@ object ID {
     // arm motors: proximal are spark maxes, distal is falcon
     const val arm_proximal_one = 12
     // new; no id
-    const val arm_proximal_two = 23
+    const val arm_proximal_two = 0
     // original was 20. Some people say it's the original; idk
     // wired to 15 slot on REV can bus i think
     const val arm_distal = 7
