@@ -50,16 +50,16 @@ import kotlin.math.cos
  */
 class RobotContainer {
     private val left1  = neoSparkMax(canBusId = ID.drive_left1){
-        inverted = true
+        inverted = false
     }
     private val left2  = neoSparkMax(canBusId = ID.drive_left2){
-        inverted = true
+        inverted = false
     }
     private val right1 = neoSparkMax(canBusId = ID.drive_right1){
-        inverted = false
+        inverted = true
     }
     private val right2 = neoSparkMax(canBusId = ID.drive_right2){
-        inverted = false
+        inverted = true
     }
 
     private val leftMotors = EncoderMotorControllerGroup(
@@ -105,7 +105,7 @@ class RobotContainer {
     
     private val driverController = CurvatureDriveController.fromDefaultBindings(
         port = 0,
-        driveMultiplier = 0.42,
+        driveMultiplier = -0.42,
         rotationMultiplier = -0.3,
         turboModeMultiplierRange = 1.0..2.38,
         precisionModeDividerRange = 1.0..4.0,
@@ -125,8 +125,8 @@ class RobotContainer {
      */
 
     private val proximalMotors = EncoderMotorControllerGroup(
-        neoSparkMax(ID.arm_proximal_one),
-        neoSparkMax(ID.arm_proximal_two){inverted = true; idleMode = CANSparkMax.IdleMode.kBrake},
+        neoSparkMax(ID.arm_proximal_one){inverted = true; idleMode = CANSparkMax.IdleMode.kBrake},
+        neoSparkMax(ID.arm_proximal_two){idleMode = CANSparkMax.IdleMode.kBrake},
     )
 
     private val arm = Arm(
@@ -207,22 +207,14 @@ class RobotContainer {
 
         arm.setDefaultRunCommand {
             // checks if all abort is enabled!
-            if (allAbortChooser.selected){
-                moveSpeeds(0.0,0.0)
-            }else{
-                moveVoltages(operatorController.armVoltages)
-            }
+            moveVoltages(operatorController.armVoltages)
             SmartDashboard.putNumber("Joint A desired volts",operatorController.jointAPower * 10.0)
             SmartDashboard.putNumber("Joint B desired volts",operatorController.jointBPower * 10.0)
         }
 
 
         intake.setDefaultRunCommand {
-            if (allAbortChooser.selected){
-                setCustomPower(0.0)
-            }else{
-                setCustomPower(operatorController.intakePower)
-            }
+            setCustomPower(operatorController.intakePower)
         }
 
         SmartDashboard.putBoolean("milena mode", false)
@@ -320,9 +312,6 @@ class RobotContainer {
 
     }
 
-    private val allAbortChooser = dashboardChooser(name = "ALL ABORT for robot", "DISABLED" to false){
-        "ENABLE ABORT!" to true
-    }
 
 
     private val autoChooser = autoChooser(defaultKey = "drive back") {
@@ -387,11 +376,7 @@ class RobotContainer {
 
 
     val autonomousCommand: Command?
-        get() = buildCommand{
-            loopForever(drivetrain){
-                leftMotors.set(0.3)
-            }
-        }
+        get() = autoChooser.selected
 
 
 

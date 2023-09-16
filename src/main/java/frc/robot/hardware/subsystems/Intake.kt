@@ -38,10 +38,12 @@ class Intake(
         motorOne.speed = motorPower*motorOneMultiplier
         motorTwo.speed = motorPower*motorTwoMultiplier
 
+        /*
         if (passiveSpeedEnabled) {
             if(motorOne.speed == 0.0) motorOne.speed = passiveSpeed
             if(motorTwo.speed == 0.0) motorTwo.speed = passiveSpeed
         }
+         */
 
 
 

@@ -63,12 +63,7 @@ class Arm(
         SmartDashboard.putNumber("Joint A Voltage (V)", jointAVoltage)
         SmartDashboard.putNumber("Joint B Voltage (V)", jointBVoltage)
 
-        if (softStopEnabled && (jointAVoltage < 0 && q1 > q1SoftRange) || (jointAVoltage > 0 && q1 < q1SoftRange)) {
-            println("Soft Stopping!")
-            proximalMotors.setVoltage(0.0)
-        } else {
-            proximalMotors.setVoltage(jointAVoltage)
-        }
+        proximalMotors.setVoltage(jointAVoltage)
 
 
 //        if (!(((jointAVoltage < 0 && thetaA < thetaASoftRange) || (jointAVoltage > 0 && thetaA > thetaASoftRange))) ) {
