@@ -6,8 +6,8 @@ import frc.chargers.hardware.motorcontrol.rev.ChargerCANSparkMax
 import frc.chargers.wpilibextensions.motorcontrol.speed
 
 class Intake(
-    private val motorOne: ChargerCANSparkMax,
-    private val motorTwo: ChargerCANSparkMax,
+    public val motorOne: ChargerCANSparkMax,
+    public val motorTwo: ChargerCANSparkMax,
     private val motorOneMultiplier: Double = 1.0,
     private val motorTwoMultiplier: Double = 1.0,
     private val passiveSpeed: Double = 0.0

@@ -21,7 +21,7 @@ fun EncoderDifferentialDrivetrain.scoreTaxi(arm: Arm, intake: Intake): Command =
 
     +arm.scoreLow(intake)
 
-    this@scoreTaxi.driveStraight(3.5.meters, 0.2, PIDConstants(0.04, 0.0, 0.0))
+    this@scoreTaxi.driveStraight(-3.5.meters, -0.2, PIDConstants(0.04, 0.0, 0.0))
 
     /*
     runParallelUntilOneFinishes {

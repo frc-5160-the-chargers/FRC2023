@@ -87,9 +87,9 @@ class RobotContainer {
     }
 
     private val intake = Intake(
-        neoSparkMax(ID.intake_left) { inverted = true },
-        neoSparkMax(ID.intake_right) { inverted = false },
-        passiveSpeed = -0.1
+        neoSparkMax(ID.intake_left) { inverted = false },
+        neoSparkMax(ID.intake_right) { inverted = true },
+        //passiveSpeed = -0.1
     )
 
     /*
@@ -125,7 +125,7 @@ class RobotContainer {
      */
 
     private val proximalMotors = EncoderMotorControllerGroup(
-        neoSparkMax(ID.arm_proximal_one){inverted = true; idleMode = CANSparkMax.IdleMode.kBrake},
+        neoSparkMax(ID.arm_proximal_one){ idleMode = CANSparkMax.IdleMode.kBrake},
         neoSparkMax(ID.arm_proximal_two){idleMode = CANSparkMax.IdleMode.kBrake},
     )
 
@@ -323,8 +323,9 @@ class RobotContainer {
 
             "Score and Taxi" to drivetrain.scoreTaxi(arm, intake)
 
+            // changed: Drives back(intake facing front)
             "drive back" to buildCommand{
-                drivetrain.driveStraight(3.5.meters, 0.2, PIDConstants(0.04, 0.0, 0.0))
+                drivetrain.driveStraight(-3.5.meters, -0.2, PIDConstants(0.04, 0.0, 0.0))
             }
 
         }

@@ -22,8 +22,8 @@ class OperatorController(port: Int) : ChargerController(port) {
     val jointBPower get() = 0.75 * armPowerCurve(rightY)
 
     val armVoltages: Arm.JointVoltages get() = Arm.JointVoltages(
-        jointAVoltage = jointAPower * 10.0,
-        jointBVoltage = jointBPower * 10.0
+        jointAVoltage = jointAPower * 10.0 * 0.7,
+        jointBVoltage = jointBPower * 10.0 * 0.8
     )
 
 }
