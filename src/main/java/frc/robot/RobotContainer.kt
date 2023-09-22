@@ -83,7 +83,6 @@ class RobotContainer {
     private val arm = Arm(
         proximalMotors = EncoderMotorControllerGroup(
             neoSparkMax(7),
-//            neoSparkMax(4),
         ),
         distalMotor = EncoderMotorControllerGroup(
             falcon(20) { neutralMode = NeutralMode.Brake },
@@ -102,16 +101,12 @@ class RobotContainer {
     )
 
     private val navX = NavX()
-//    private val limelight = Limelight()
 
     init {
         configureSubsystems()
         configureButtonBindings()
     }
 
-//    val camera = CameraServer.startAutomaticCapture()
-//    val camera1 = CameraServer.startAutomaticCapture(0)
-//    val camera2 = CameraServer.startAutomaticCapture(1)
 
     fun telemetry() {
         SmartDashboard.putNumber("Pitch (º)", navX.gyroscope.pitch.inUnit(degrees))
@@ -126,18 +121,11 @@ class RobotContainer {
         proximalCANCoder.setPositionToAbsolute()
         proximalCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360)
         proximalCANCoder.configMagnetOffset(180.0)
-//        proximalCANCoder.configMagnetOffset(-89.2)
 
         distalCANCoder.configFactoryDefault()
         distalCANCoder.setPositionToAbsolute()
         distalCANCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360)
         distalCANCoder.configMagnetOffset(-50.0)
-//        distalCANCoder.configMagnetOffset(180.0)
-//        distalCANCoder.configMagnetOffset(-174.02)
-
-
-//        arm.q1 += 268.85.degrees
-//        arm.q2 += 177.02.degrees
 
         arm.q1 += 268.degrees
         arm.q2 += 187.degrees
@@ -164,25 +152,10 @@ class RobotContainer {
 
         var cart = false
 
-//        val armCommand = PIDArmAngular(
-//            arm,
-//            jointAPIDConstants = PIDConstants(30.0, 0.02, 2.0),
-//            jointBPIDConstants = PIDConstants(5.0, 0.01, 0.7)
-//        )
 
-//        arm.setDefaultRunCommand {
-//            armCommand.thetaA += operatorController.jointAPower.ofUnit(degrees)
-//            armCommand.thetaB += operatorController.jointBPower.ofUnit(degrees)
-//
-//            armCommand.execute()
-//        }
 
         arm.setDefaultRunCommand {
-//            if (cart) {
-//                arm.moveCartesian(operatorController.leftY, -operatorController.rightY)
-//            } else {
-                arm.moveVoltages(operatorController.armVoltages)
-//            }
+            arm.moveVoltages(operatorController.armVoltages)
         }
 
         operatorController.restPresetButton.whenReleased(InstantCommand { cart = !cart })
@@ -193,11 +166,6 @@ class RobotContainer {
 
         SmartDashboard.putBoolean("milena mode", false)
 
-//        val driverStraightAssistTurnPID = UnitSuperPIDController<AngleDimension, ScalarDimension>(
-//            pidConstants = PIDConstants(0.5, 0.0, 0.0),
-//            getInput = { navX.heading },
-//            target = navX.heading
-//        )
 
         drivetrain.setDefaultRunCommand {
             var turnPower: Double = driverController.curvatureOutput.rotationPower
@@ -216,35 +184,6 @@ class RobotContainer {
             )
         }
 
-        /*drivetrain.defaultCommand = RunCommand(drivetrain) {
-            SmartDashboard.putBoolean("driverStraightAssist enabled", driverController.driverStraightAssistEnabled)
-            SmartDashboard.putNumber("driverStraightAssist target", driverStraightAssistTurnPID.target.value)
-            SmartDashboard.putNumber("curvatureOutput", driverController.curvatureOutput.rotationPower)
-
-            if (!driverController.driverStraightAssistEnabled) {
-                driverStraightAssistTurnPID.target = navX.heading
-            }
-
-            if (abs(driverController.curvatureOutput.rotationPower) < 0.1) {
-
-                SmartDashboard.putBoolean("regular driving", false)
-                val turnPower = if (driverController.driverStraightAssistEnabled) {
-                    (-cos((operatorController.pov + 90.0) * PI / 180.0) * 0.2).let {
-                        if (abs(it) < 0.05) 0.0 else it
-                    }
-                } else {
-                    driverStraightAssistTurnPID.calculateOutput().value
-                }
-
-                drivetrain.arcadeDrive(power = driverController.curvatureOutput.xPower, turnPower)
-            } else {
-                SmartDashboard.putBoolean("regular driving", true)
-                drivetrain.curvatureDrive(
-                    driverController.curvatureOutput.xPower,
-                    driverController.curvatureOutput.rotationPower
-                )
-            }
-        }*/
     }
 
     private fun configureButtonBindings() {
@@ -270,20 +209,6 @@ class RobotContainer {
         operatorController.cubePresetButton.whenReleased(releaseCommand)
         operatorController.restPresetButton.whenReleased(releaseCommand)
 
-//        operatorController.restPresetButton.whileHeld(
-//            HoldArmAngularQ(arm, q1 = -71.degrees, q2 = 344.degrees))
-//        operatorController.substationPresetButton.whileHeld(
-//            HoldArmAngular(arm, thetaA = -10.degrees, thetaB = -191.degrees))
-
-
-//        val cameraSelection: NetworkTableEntry = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection")
-//
-//        driverController.switchCameraButton
-//            .whenPressed(InstantCommand {
-//                cameraSelection.setString(camera2.name)
-//            }).whenReleased(InstantCommand {
-//                cameraSelection.setString(camera1.name)
-//            })
     }
 
     private val autoChooser = SendableChooser<Command>().apply {
@@ -294,7 +219,6 @@ class RobotContainer {
                 drivetrain.scoreTaxi(arm, intake)
             }
         )
-//        addOption("Limelight", aimAndScore(arm, drivetrain, limelight, navX,0, 48.inches, 0.meters, 1.7.centi.meters))
         addOption("TEST hold", HoldArmCartesian(arm))
         addOption("TEST move", HoldArmCartesian(arm, 3.feet, 3.feet))
         setDefaultOption(

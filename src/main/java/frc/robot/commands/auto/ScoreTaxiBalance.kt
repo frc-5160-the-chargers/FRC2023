@@ -29,7 +29,6 @@ fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, nav
         intake.setCustomPower(0.0)
     }
 
-//    runUntilFinish(arm.moveToAngular(thetaA = 60.degrees, thetaB = 40.degrees).withTimeout(0.8))
 
     runParallelUntilOneFinishes {
         runUntil({ navX.gyroscope.pitch - 2.9.degrees < -10.degrees }, this@scoreTaxiBalance) {

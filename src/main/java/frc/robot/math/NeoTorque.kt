@@ -6,7 +6,7 @@ import com.batterystaple.kmeasure.units.meters
 import com.batterystaple.kmeasure.units.newtons
 import frc.chargers.hardware.motorcontrol.rev.ChargerCANSparkMax
 
-// TODO Add current stuff to ChargerLib and make type some interface
+
 fun ChargerCANSparkMax.setStallTorqueNEO(torque: Torque) {
     setVoltage(
         stallTorqueNmToVoltage(torque.inUnit(newtons * meters))
