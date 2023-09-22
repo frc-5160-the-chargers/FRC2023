@@ -9,11 +9,6 @@ object ID {
     // wired to 15 slot on REV can bus i think
     const val arm_distal = 7
 
-    // arm encoders: both CANcoder IDs
-    // NOTE: UNUSED as of now(looks like we're going encoder-less!)
-    const val arm_jointa_encoder_proximal = 0
-    const val arm_jointb_encoder_distal = 0
-
     // drivetrain motors: all are neos(can bus IDs)
     // verified
     const val drive_left1 = 9

@@ -16,31 +16,20 @@ import frc.robot.commands.scoreLow
 import frc.robot.hardware.subsystems.Arm
 import frc.robot.hardware.subsystems.Intake
 
-private const val autoSpeed = 0.4
+/**
+ * A Command that scores a cube low, taxi-s then balances on the charge station.
+ * Uses the [buildCommand] DSL.
+ *
+ * @see [scoreTaxi]
+ */
 fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, navX: NavX) = buildCommand {
-    //+(arm.moveToAngular(thetaA = 60.degrees, thetaB = 9.degrees).withTimeout(2.0))
-
-    /*
-    loopFor(0.5.seconds, intake) {
-        intake.setCustomPower(-0.25)
-    }
-
-    loopFor(0.4.seconds, arm) {
-        arm.moveSpeeds(omegaA = 0.0, omegaB = -0.4)
-        intake.setCustomPower(0.0)
-    }
-    */
 
     +arm.scoreLow(intake)
-
-//    runUntilFinish(arm.moveToAngular(thetaA = 60.degrees, thetaB = 40.degrees).withTimeout(0.8))
 
     runParallelUntilOneFinishes {
         loopUntil({ navX.gyroscope.pitch - 2.9.degrees < -10.degrees }, this@scoreTaxiBalance) {
             curvatureDrive(autoSpeed, 0.0)
         }
-
-        //+arm.moveToAngular(thetaA = 133.degrees, thetaB = 0.degrees)
     }
 
     printToConsole { "Pitch < -10 deg (${navX.gyroscope.pitch.inUnit(degrees)}" }
@@ -50,7 +39,6 @@ fun EncoderDifferentialDrivetrain.scoreTaxiBalance(arm: Arm, intake: Intake, nav
             curvatureDrive(autoSpeed, 0.0)
         }
 
-        //+arm.moveToAngular(thetaA = 133.degrees, thetaB = 0.degrees)
     }
 
     printToConsole { "Pitch > 10 deg (${navX.gyroscope.pitch.inUnit(degrees)}" }

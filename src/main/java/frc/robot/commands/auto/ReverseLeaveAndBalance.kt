@@ -2,7 +2,6 @@ package frc.robot.commands.auto
 
 import com.batterystaple.kmeasure.quantities.abs
 import com.batterystaple.kmeasure.quantities.inUnit
-import com.batterystaple.kmeasure.quantities.sin
 import com.batterystaple.kmeasure.units.degrees
 import com.batterystaple.kmeasure.units.feet
 import com.batterystaple.kmeasure.units.seconds
@@ -14,7 +13,15 @@ import frc.chargers.hardware.sensors.gyroscopes.HeadingProvider
 import frc.chargers.hardware.subsystems.drivetrain.EncoderDifferentialDrivetrain
 
 
-private const val autoSpeed = 0.4
+internal const val autoSpeed = 0.4
+
+/**
+ * A balance command that causes the drivetrain to drive beyond the charge station, earning taxi points,
+ * before balancing on the charge station.
+ * Uses the [buildCommand] DSL.
+ *
+ * @see [balance]
+ */
 fun EncoderDifferentialDrivetrain.taxiBalance(navX: NavX) = buildCommand {
     loopUntil({ navX.gyroscope.pitch-2.9.degrees < -10.degrees }, this@taxiBalance) {
         curvatureDrive(-autoSpeed,0.0)
