@@ -3,6 +3,7 @@ package frc.robot.hardware.subsystems.arm
 import com.batterystaple.kmeasure.quantities.*
 import com.batterystaple.kmeasure.units.volts
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import org.littletonrobotics.junction.Logger
 
 
 data class JointVoltages(
@@ -44,6 +45,7 @@ class Arm(
 
     override fun periodic() {
         io.updateInputs(inputs)
+        Logger.getInstance().processInputs("Arm",inputs)
     }
 
 }

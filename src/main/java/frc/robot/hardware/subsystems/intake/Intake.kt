@@ -3,6 +3,7 @@ package frc.robot.hardware.subsystems.intake
 import com.batterystaple.kmeasure.quantities.*
 import com.batterystaple.kmeasure.units.volts
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import org.littletonrobotics.junction.Logger
 
 class Intake(
     private val io: IntakeIO
@@ -24,6 +25,7 @@ class Intake(
 
     override fun periodic(){
         io.updateInputs(inputs)
+        Logger.getInstance().processInputs("Intake",inputs)
     }
 
 
