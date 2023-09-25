@@ -1,10 +1,9 @@
 @file:Suppress("detekt.MagicNumber")
 package frc.robot.hardware.inputdevices
 
-import com.batterystaple.kmeasure.quantities.times
-import com.batterystaple.kmeasure.units.volts
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import frc.chargers.hardware.inputdevices.ChargerController
-import frc.robot.hardware.subsystems.arm.JointVoltages
+import frc.robot.hardware.subsystems.Arm
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sign
@@ -22,10 +21,9 @@ class OperatorController(port: Int) : ChargerController(port) {
     // distal
     val jointBPower get() = 0.75 * armPowerCurve(rightY)
 
-    val armVoltages: JointVoltages
-        get() = JointVoltages(
-        proximalV = jointAPower * 10.0 * 0.7.volts,
-        distalV = jointBPower * 10.0 * 0.8.volts
+    val armVoltages: Arm.JointVoltages get() = Arm.JointVoltages(
+        jointAVoltage = jointAPower * 10.0 * 0.7,
+        jointBVoltage = jointBPower * 10.0 * 0.8
     )
 
 }
