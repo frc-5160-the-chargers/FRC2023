@@ -86,20 +86,8 @@ class RobotContainer {
 
     private val intake = Intake(
         neoSparkMax(ID.intake_left) { inverted = false },
-        neoSparkMax(ID.intake_right) { inverted = true },
-        //passiveSpeed = -0.1
+        neoSparkMax(ID.intake_right) { inverted = true }
     )
-
-    /*
-    private val driverController = DriverController(
-        port = 0,
-        deadband = 0.05,
-        forwardsPowerScale = 0.42,
-        rotationPowerScale = -0.3,
-        turboModeMultiplierRange = 1.0..2.38,
-        precisionModeDividerRange = 1.0..4.0,
-    )
-     */
     
     private val driverController = CurvatureDriveController.fromDefaultBindings(
         port = 0,
@@ -111,16 +99,7 @@ class RobotContainer {
     )
     private val operatorController = OperatorController(port = 1)
 
-    /*
-    private val proximalCANCoder = ChargerCANcoder(ID.arm_jointa_encoder_proximal){
-        absoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1
-        magnetOffset = 180.degrees
-    }
-    private val distalCANCoder = ChargerCANcoder(ID.arm_jointb_encoder_distal){
-        absoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1
-        magnetOffset = -(50.degrees)
-    }
-     */
+
 
     private val proximalMotors = EncoderMotorControllerGroup(
         neoSparkMax(ID.arm_proximal_one){ idleMode = CANSparkMax.IdleMode.kBrake},
