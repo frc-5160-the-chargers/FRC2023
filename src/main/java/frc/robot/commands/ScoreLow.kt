@@ -6,6 +6,9 @@ import frc.chargers.commands.buildCommand
 import frc.robot.hardware.subsystems.Arm
 import frc.robot.hardware.subsystems.Intake
 
+/**
+ * A command that allows the arm to automatically score low; primarily used in auto.
+ */
 fun Arm.scoreLow(intake: Intake): Command = buildCommand{
     loopFor(0.1.seconds,this@scoreLow){
         moveVoltages(0.0,1.0)

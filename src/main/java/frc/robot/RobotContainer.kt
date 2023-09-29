@@ -5,17 +5,13 @@ package frc.robot
 import com.batterystaple.kmeasure.quantities.*
 import com.batterystaple.kmeasure.units.*
 import com.ctre.phoenix6.configs.TalonFXConfiguration
-import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.revrobotics.CANSparkMax
-import com.revrobotics.CANSparkMaxLowLevel
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.PrintCommand
 import frc.chargers.commands.InstantCommand
 import frc.chargers.commands.buildCommand
 import frc.chargers.commands.drivetrainCommands.driveStraight
-//import frc.chargers.commands.drivetrainCommands.followPath
 import frc.chargers.commands.setDefaultRunCommand
 import frc.chargers.controls.pid.PIDConstants
 import frc.chargers.controls.pid.UnitSuperPIDController
@@ -25,18 +21,13 @@ import frc.chargers.hardware.motorcontrol.EncoderMotorControllerGroup
 import frc.chargers.hardware.motorcontrol.ctre.falcon
 import frc.chargers.hardware.motorcontrol.rev.neoSparkMax
 import frc.chargers.hardware.sensors.NavX
-import frc.chargers.hardware.sensors.encoders.absolute.ChargerCANcoder
 import frc.chargers.hardware.sensors.gyroscopes.HeadingProvider
 import frc.chargers.hardware.subsystems.drivetrain.EncoderDifferentialDrivetrain
 import frc.chargers.hardware.subsystems.drivetrain.sparkMaxDrivetrain
 import frc.chargers.wpilibextensions.autoChooser
-import frc.chargers.wpilibextensions.dashboardChooser
-import frc.chargers.wpilibextensions.geometry.LinearTrapezoidProfile
-//import frc.robot.commands.HoldArmCartesian
 import frc.robot.commands.auto.scoreTaxi
 import frc.robot.commands.auto.scoreTaxiBalance
 import frc.robot.commands.auto.taxiBalance
-//import frc.robot.commands.moveToAngular
 import frc.robot.hardware.inputdevices.OperatorController
 import frc.robot.hardware.subsystems.Arm
 import frc.robot.hardware.subsystems.Intake
@@ -88,7 +79,13 @@ class RobotContainer {
         neoSparkMax(ID.intake_left) { inverted = false },
         neoSparkMax(ID.intake_right) { inverted = true }
     )
-    
+
+    /**
+     * The driver controller. Uses the ChargerLib class [CurvatureDriveController];
+     * an xbox controller that can drive a differential drivetrain
+     *
+     * fromDefaultBindings is a factory function that creates a controller from default bindings.
+     */
     private val driverController = CurvatureDriveController.fromDefaultBindings(
         port = 0,
         driveMultiplier = -0.42,
@@ -97,17 +94,31 @@ class RobotContainer {
         precisionModeDividerRange = 1.0..4.0,
         deadband = 0.05
     )
+
+    /**
+     * The operator controller of the robot. Responsible for moving the arm, activating the intake, and so on.
+     */
     private val operatorController = OperatorController(port = 1)
 
 
+    /**
+     * the proximal, or base, motors for the Arm subsystem.
+     * It basically acts like a grouped motor: when one function is called here,
+     * all the motors will be run accordingly.
+     */
 
-    private val proximalMotors = EncoderMotorControllerGroup(
-        neoSparkMax(ID.arm_proximal_one){ idleMode = CANSparkMax.IdleMode.kBrake},
-        neoSparkMax(ID.arm_proximal_two){idleMode = CANSparkMax.IdleMode.kBrake},
-    )
 
+    /**
+     * The Arm subsystem.
+     * All the parameters should be relatively self-explanatory.
+     * Note: all the instance variables with "A" or "proximal" refer to the base joint of the arm;
+     * likewise, all the instance variables with "B" or "Distal" refer to the second joint of the arm.
+     */
     private val arm = Arm(
-        proximalMotors = proximalMotors,
+        proximalMotors = EncoderMotorControllerGroup(
+            neoSparkMax(ID.arm_proximal_one){ idleMode = CANSparkMax.IdleMode.kBrake},
+            neoSparkMax(ID.arm_proximal_two){idleMode = CANSparkMax.IdleMode.kBrake},
+        ),
         distalMotor = EncoderMotorControllerGroup(
             // known issue where falcon PID-s back to its original position - fix in progress
             falcon(ID.arm_distal) { neutralMode = NeutralModeValue.Brake }.also{
@@ -121,16 +132,19 @@ class RobotContainer {
         jointAOffset = 0.0.degrees,
         jointBOffset = 0.0.degrees,
         gearRatioA = 1.0 / (8.46 * 70.0/24.0 * 70.0/24.0 * 4.0),
-        // 125 is the falcon gear ratio(was 180 went to 135, and is now 125)
         gearRatioB = 1.0 / (125.0 * 28.0/15.0),
         segmentALength = 37.inches,
-        segmentBLength = 19.inches,
-        q1SoftRange = 10.degrees..133.degrees,
-        q2SoftRange =  0.degrees..0.degrees
+        segmentBLength = 19.inches
     )
 
+    /*
+    Defines the navX; an IMU used for auto and for balancing.
+     */
     private val navX = NavX()
 
+    /*
+    A PID controller used for drive straight assist.
+     */
     private val driveStraightAssistController =
         UnitSuperPIDController(
             PIDConstants(0.2,0.0,0.0),
@@ -159,13 +173,6 @@ class RobotContainer {
 
         arm.q1 += 268.degrees
         arm.q2 += 187.degrees
-
-
-
-        println(left1.voltageCompensationNominalVoltage)
-        println(left2.voltageCompensationNominalVoltage)
-        println(right1.voltageCompensationNominalVoltage)
-        println(right2.voltageCompensationNominalVoltage)
 
 
         /*

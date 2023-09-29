@@ -8,7 +8,6 @@ import frc.chargers.hardware.motorcontrol.EncoderMotorController
 import frc.chargers.hardware.sensors.encoders.PositionEncoder
 import frc.chargers.utils.a
 import frc.chargers.wpilibextensions.motorcontrol.speed
-import frc.chargers.utils.math.*
 import frc.chargers.utils.math.equations.compileMultiline
 import frc.chargers.utils.math.equations.stallTorqueToVoltage
 import frc.chargers.utils.p
@@ -19,6 +18,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 import org.ejml.data.DMatrixRMaj as M
 
+/**
+ * The Arm Subsystem of the robot.
+ * Only current functionality is setting voltage to the arm motors,
+ * as the lack of encoders prevents any advanced controls from happening.
+ */
 @Suppress("LongParameterList")
 class Arm(
     private val proximalMotors: EncoderMotorController,
@@ -30,9 +34,7 @@ class Arm(
     private val gearRatioA: Double,
     private val gearRatioB: Double,
     val segmentALength: Distance,
-    val segmentBLength: Distance,
-    val q1SoftRange: ClosedRange<Angle>,
-    val q2SoftRange: ClosedRange<Angle>,
+    val segmentBLength: Distance
 ) : SubsystemBase() {
 
 
@@ -64,17 +66,9 @@ class Arm(
         SmartDashboard.putNumber("Joint B Voltage (V)", jointBVoltage)
 
         proximalMotors.setVoltage(jointAVoltage)
-
-
-//        if (!(((jointAVoltage < 0 && thetaA < thetaASoftRange) || (jointAVoltage > 0 && thetaA > thetaASoftRange))) ) {
-//            proximalMotors.setVoltage(jointAVoltage)
-//        }
         distalMotor.setVoltage(jointBVoltage)
     }
 
-//    private fun Double.withSoftStop(currentAngle: Angle, softStopRange: ClosedRange<Angle>) {
-//        if ()
-//    }
 
     fun moveSpeeds(omegaA: Double = 0.0, omegaB: Double = 0.0) {
         proximalMotors.speed = omegaA
@@ -87,7 +81,6 @@ class Arm(
         moveSpeeds(thetaDot[0], thetaDot[1])
     }
 
-//    private fun shouldSoftStop()
 
     override fun periodic() {
         telemetry()
@@ -106,8 +99,6 @@ class Arm(
 
         SmartDashboard.putNumber("Theta A (º)", thetaA.inUnit(degrees))
         SmartDashboard.putNumber("Theta B (º)", thetaB.inUnit(degrees))
-//        SmartDashboard.putNumber("Omega A (º/s)", omegaA.inUnit(degrees / seconds))
-//        SmartDashboard.putNumber("Omega B (º/s)", omegaB.inUnit(degrees / seconds))
         SmartDashboard.putNumber("Q1 (º)", q1.inUnit(degrees))
         SmartDashboard.putNumber("Q2 (º)", q2.inUnit(degrees))
         SmartDashboard.putBoolean("Soft Stop Enabled", softStopEnabled)
@@ -128,14 +119,10 @@ class Arm(
             p[ cos(thetaA) /(lB * k), -sin(thetaA) /(lB * k)]
         ])
 
-//        SimpleMatrix(J).mult(SimpleMatrix(v))
 
         val theta_dot = SimpleMatrix(J).mult(SimpleMatrix(v))
 
         return theta_dot.getMatrix()
-//        eq.alias(q1, "q1", q2, "q2", l1, "l1", l2, "l2", v, "v")
-//        calculateThetaDot.perform()
-//        return eq.lookupDDRM("theta_dot")
     }
 
     @Suppress("VariableNaming", "Unused", "NonAsciiCharacters")
@@ -162,21 +149,12 @@ class Arm(
         val gearedTorqueB = torqueB * gearRatioB
 
         val voltageA = stallTorqueToVoltage(gearedTorqueA.ofUnit(newtons*meters))
-//        val voltageA = stallTorqueNmToVoltage(gearedTorqueA/2) // for when two motors mounted
         val voltageB = stallTorqueToVoltage(gearedTorqueB.ofUnit(newtons*meters))
 
         return JointVoltages(voltageA.inUnit(volts), voltageB.inUnit(volts))
     }
 
-    data class JointVoltages(val jointAVoltage: Double, val jointBVoltage: Double){
-        /*
-        constructor(jointAVoltage: Voltage, jointBVoltage: Voltage): this(
-            jointAVoltage.inUnit(volts),
-            jointBVoltage.inUnit(volts)
-        )
-
-         */
-    }
+    data class JointVoltages(val jointAVoltage: Double, val jointBVoltage: Double)
 
 
     private val gravityCompEquation = Equation().apply {
