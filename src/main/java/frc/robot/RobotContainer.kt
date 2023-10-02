@@ -3,7 +3,9 @@
 package frc.robot
 
 
+import edu.wpi.first.wpilibj.Encoder
 import edu.wpi.first.wpilibj.RobotBase
+import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim
 import edu.wpi.first.wpilibj2.command.Command
 import frc.chargers.commands.DoNothing
 import frc.chargers.commands.setDefaultRunCommand
@@ -22,13 +24,13 @@ import frc.robot.hardware.subsystems.intake.IntakeIOSim
 
 object RobotContainer {
 
-    private val drivetrain: EncoderDifferentialDrivetrainAK
+    private val drivetrain: EncoderDifferentialDrivetrain
     private val arm: Arm
     private val intake: Intake
 
     init{
         if (RobotBase.isReal()){
-            drivetrain = sparkMaxDrivetrainAK(
+            drivetrain = sparkMaxDrivetrain(
                 leftMotors = EncoderMotorControllerGroup(
                     DriveMotors.left1, DriveMotors.left2
                 ),
@@ -42,9 +44,8 @@ object RobotContainer {
             arm = Arm(ArmIOReal)
             intake = Intake(IntakeIOReal)
         }else{
-            drivetrain = EncoderDifferentialDrivetrainAK(
-                EncoderDifferentialDrivetrainIOSim(),
-                gearRatio = DrivetrainConstants.gearRatio,
+            drivetrain = simulatedDrivetrain(
+                simMotors = DifferentialDrivetrainSim.KitbotMotor.kDoubleNEOPerSide,
                 wheelDiameter = DrivetrainConstants.wheelDiameter,
                 width = DrivetrainConstants.width
             )
