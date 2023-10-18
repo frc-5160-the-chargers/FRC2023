@@ -8,18 +8,15 @@ import edu.wpi.first.wpilibj.RobotBase
 import edu.wpi.first.wpilibj.livewindow.LiveWindow
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
-import frc.chargers.advantagekitextensions.NTSafePublisher
-import frc.chargers.advantagekitextensions.logChargerLibMetadata
-import frc.chargers.advantagekitextensions.logGitDirty
-import frc.chargers.advantagekitextensions.startCommandLog
+import frc.chargers.advantagekitextensions.*
+import frc.chargers.commands.DoNothing
+import frc.chargers.wpilibextensions.Alert
 import frc.robot.BuildConstants.*
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
-import java.nio.file.Files
-import java.nio.file.Path
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -28,13 +25,14 @@ import java.nio.file.Path
  * project.
  */
 object Robot : LoggedRobot() {
-    private var m_autonomousCommand: Command? = null
+    private var m_autonomousCommand: Command = DoNothing()
 
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
      */
     override fun robotInit() {
+        val noLogAlert = Alert.warning(text = "No logging to WPILOG is happening; cannot find USB stick")
 
         val logger = Logger.getInstance()
         setUseTiming(
@@ -56,9 +54,7 @@ object Robot : LoggedRobot() {
 
             // real robot
             if (RobotBase.isReal()){
-                if (Files.exists(Path.of(LOG_FOLDER))){
-                    addDataReceiver(WPILOGWriter(LOG_FOLDER))
-                }
+                addRioUSBReceiver()
                 addDataReceiver(NTSafePublisher())
             }else if (IS_REPLAY){
                 // replay mode; sim
@@ -108,7 +104,7 @@ object Robot : LoggedRobot() {
     /** This autonomous runs the autonomous command selected by your [RobotContainer] class.  */
     override fun autonomousInit() {
         m_autonomousCommand = RobotContainer.autonomousCommand
-        m_autonomousCommand?.schedule()
+        m_autonomousCommand.schedule()
     }
 
     /** This function is called periodically during autonomous.  */
@@ -118,7 +114,7 @@ object Robot : LoggedRobot() {
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
         // this line or comment it out.
-        m_autonomousCommand?.cancel()
+        m_autonomousCommand.cancel()
     }
 
     /** This function is called periodically during operator control.  */

@@ -5,6 +5,6 @@ import frc.chargers.hardware.motorcontrol.rev.neoSparkMax
 
 
 object IntakeMotors{
-    val left: EncoderMotorController = neoSparkMax(6)
-    val right: EncoderMotorController = neoSparkMax(6)
+    val left: EncoderMotorController = neoSparkMax(8)
+    val right: EncoderMotorController = neoSparkMax(4)
 }

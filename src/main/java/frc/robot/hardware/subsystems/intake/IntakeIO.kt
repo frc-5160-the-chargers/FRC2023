@@ -1,6 +1,7 @@
 package frc.robot.hardware.subsystems.intake
 
 import com.batterystaple.kmeasure.quantities.*
+import com.batterystaple.kmeasure.units.degrees
 import com.batterystaple.kmeasure.units.radians
 import com.batterystaple.kmeasure.units.seconds
 import com.batterystaple.kmeasure.units.volts
@@ -54,14 +55,12 @@ object IntakeIOSim: IntakeIO{
 interface IntakeIO{
     class Inputs: ChargerLoggableInputs(){
         var leftSpeed by loggedQuantity(
-            AngularVelocity(0.0),
-            "leftVelocityDegPerSec",
-            radians/seconds
+            logUnit = degrees/seconds,
+            "leftVelocityDegPerSec"
         )
         var rightSpeed by loggedQuantity(
-            AngularVelocity(0.0),
-            "rightVelocityDegPerSec",
-            radians/seconds
+            logUnit = degrees/seconds,
+            "rightVelocityDegPerSec"
         )
     }
 

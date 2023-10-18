@@ -16,7 +16,18 @@
       "/LiveWindow/Ungrouped/DifferentialDrive[1]": "DifferentialDrive",
       "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
       "/LiveWindow/Ungrouped/Talon FX [6]": "Motor Controller",
-      "/LiveWindow/Ungrouped/Talon FX [7]": "Motor Controller"
+      "/LiveWindow/Ungrouped/Talon FX [7]": "Motor Controller",
+      "/SmartDashboard/Field": "Field2d"
+    }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "AdvantageKit": {
+        "Arm": {
+          "open": true
+        },
+        "open": true
+      }
     }
   }
 }

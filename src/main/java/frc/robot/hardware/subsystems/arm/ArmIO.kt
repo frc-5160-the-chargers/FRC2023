@@ -9,6 +9,10 @@ import frc.chargers.wpilibextensions.motorcontrol.setVoltage
 
 
 object ArmIOReal: ArmIO{
+    init{
+        // inits the ArmMotors
+        ArmMotors
+    }
     override fun setVoltages(proximalV: Voltage, distalV: Voltage) {
         ArmMotors.proximal.setVoltage(proximalV)
         ArmMotors.distal.setVoltage(distalV)
@@ -71,11 +75,11 @@ object ArmIOSim: ArmIO{
 
 interface ArmIO {
     class Inputs: ChargerLoggableInputs(){
-        var thetaProximal by loggedQuantity(0.degrees,"proximalAngleDegrees", degrees)
-        var thetaDistal by loggedQuantity(0.degrees,"distalAngleDegrees", degrees)
+        var thetaProximal by loggedQuantity(logUnit = degrees,"proximalAngleDegrees")
+        var thetaDistal by loggedQuantity(logUnit = degrees,"distalAngleDegrees")
 
-        var proximalJointVelocity by loggedQuantity(0.degrees/0.seconds,"proximalJointVelocityDegPerSec",degrees/seconds)
-        var distalJointVelocity by loggedQuantity(0.degrees/0.seconds,"distalJointVelocityDegPerSec",degrees/seconds)
+        var proximalJointVelocity by loggedQuantity(logUnit = degrees/seconds,"proximalJointVelocityDegPerSec")
+        var distalJointVelocity by loggedQuantity(logUnit = degrees/seconds,"distalJointVelocityDegPerSec")
     }
 
     fun setVoltages(proximalV: Voltage, distalV: Voltage)
