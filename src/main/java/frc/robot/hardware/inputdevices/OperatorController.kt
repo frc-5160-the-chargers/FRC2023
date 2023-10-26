@@ -24,8 +24,8 @@ class OperatorController(port: Int) : ChargerController(port) {
 
     val armVoltages: JointVoltages
         get() = JointVoltages(
-        proximalV = jointAPower * 10.0 * 0.7.volts,
-        distalV = jointBPower * 10.0 * 0.8.volts
+        proximalV = jointAPower * 10.0 * 0.5.volts,
+        distalV = jointBPower * 10.0 * 0.6.volts
     )
 
 }

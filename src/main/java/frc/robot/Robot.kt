@@ -32,7 +32,7 @@ object Robot : LoggedRobot() {
      * initialization code.
      */
     override fun robotInit() {
-        val noLogAlert = Alert.warning(text = "No logging to WPILOG is happening; cannot find USB stick")
+        //val noLogAlert = Alert.warning(text = "No logging to WPILOG is happening; cannot find USB stick")
 
         val logger = Logger.getInstance()
         setUseTiming(

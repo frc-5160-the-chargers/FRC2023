@@ -16,9 +16,9 @@ import frc.robot.hardware.inputdevices.OperatorController
 import frc.robot.hardware.subsystems.arm.Arm
 import frc.robot.hardware.subsystems.arm.ArmIOReal
 import frc.robot.hardware.subsystems.arm.ArmIOSim
-import frc.robot.hardware.subsystems.intake.Intake
-import frc.robot.hardware.subsystems.intake.IntakeIOReal
-import frc.robot.hardware.subsystems.intake.IntakeIOSim
+//import frc.robot.hardware.subsystems.intake.Intake
+//import frc.robot.hardware.subsystems.intake.IntakeIOReal
+//import frc.robot.hardware.subsystems.intake.IntakeIOSim
 
 
 
@@ -26,7 +26,7 @@ object RobotContainer {
 
     private val drivetrain: EncoderDifferentialDrivetrain
     private val arm: Arm
-    private val intake: Intake
+    //private val intake: Intake
 
     init{
         if (RobotBase.isReal()){
@@ -42,7 +42,7 @@ object RobotContainer {
                 width = DrivetrainConstants.width
             )
             arm = Arm(ArmIOReal)
-            intake = Intake(IntakeIOReal)
+            //intake = Intake(IntakeIOReal)
         }else{
             drivetrain = simulatedDrivetrain(
                 simMotors = DifferentialDrivetrainSim.KitbotMotor.kDoubleNEOPerSide,
@@ -50,7 +50,7 @@ object RobotContainer {
                 width = DrivetrainConstants.width
             )
             arm = Arm(ArmIOSim)
-            intake = Intake(IntakeIOSim)
+            //intake = Intake(IntakeIOSim)
         }
         configureButtonBindings()
     }
@@ -62,9 +62,12 @@ object RobotContainer {
         arm.setDefaultRunCommand{
             moveVoltages(operatorController.armVoltages)
         }
+        /*
         intake.setDefaultRunCommand{
             setSpeed(operatorController.intakePower)
         }
+
+         */
     }
 
     fun telemetry(){

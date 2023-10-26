@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim
 import frc.chargers.advantagekitextensions.ChargerLoggableInputs
 import frc.chargers.wpilibextensions.motorcontrol.setVoltage
 
+/*
 object IntakeIOReal: IntakeIO{
     override fun setVoltage(outputVolts: Voltage) {
         IntakeMotors.left.setVoltage(outputVolts)
@@ -68,3 +69,5 @@ interface IntakeIO{
     fun updateInputs(inputs: Inputs)
 
 }
+
+ */
